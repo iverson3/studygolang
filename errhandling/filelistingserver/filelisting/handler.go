@@ -10,6 +10,16 @@ import (
 
 const prefix = "/list/"
 
+type userError string
+
+func (e userError) Error() string {
+	return e.Error()
+}
+
+func (e userError) Message() string {
+	return string(e)
+}
+
 func HandleFileList(writer http.ResponseWriter, request *http.Request) error {
 	index := strings.Index(request.URL.Path, prefix)
 	log.Println(index)

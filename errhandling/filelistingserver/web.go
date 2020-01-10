@@ -1,11 +1,11 @@
 package main
 
 import (
-	"awesomeProject1/errhandling/filelistingserver/filelisting"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
-	"testing"
+	"studygolang/errhandling/filelistingserver/filelisting"
 )
 
 // 文件列表服务器
@@ -17,30 +17,20 @@ type userError interface {
 	Message() string
 }
 
-type testingUserError string
+//func errUserError(writer http.ResponseWriter, request *http.Request) error {
+//	return testingUserError("user error")
+//}
 
-func (e testingUserError) Error() string {
-	return e.Error()
-}
-
-func (e testingUserError) Message() string {
-	return string(e)
-}
-
-func errUserError(writer http.ResponseWriter, request *http.Request) error {
-	return testingUserError("user error")
-}
-
-func TestErrWrapper(t *testing.T) {
-	tests := []struct{
-		h appHandler
-		code int
-		message string
-	} {
-		{errPanic, 500, "Internal Server Error"},
-		{errUserError, 400, "user error"},
-	}
-}
+//func TestErrWrapper(t *testing.T) {
+//	tests := []struct{
+//		h appHandler
+//		code int
+//		message string
+//	} {
+//		{errPanic, 500, "Internal Server Error"},
+//		{errUserError, 400, "user error"},
+//	}
+//}
 
 type appHandler func(writer http.ResponseWriter, request *http.Request) error
 
