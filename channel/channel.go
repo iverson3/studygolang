@@ -9,6 +9,8 @@ import (
 // go slogan: 不要通过共享内存来通信, 要通过通信来共享内存
 
 // channel是一等公民 可以作为参数或返回值
+// make(chan Type, capacity) 指定缓冲区容量
+// 不使用缓冲区容量，那么该通道就是同步的，因此会阻塞直到接收者与发送者都做好准备；指定缓冲区容量，那么该通道是异步的。
 
 // chan<- int   该channel只能发数据 (向channel里面发数据)
 // <-chan int   该channel只能收数据 (从channel里面收数据)
