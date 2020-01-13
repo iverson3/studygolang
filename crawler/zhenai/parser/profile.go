@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ func ParseProfile(contents []byte, name string, sex string) engine.ParseResult {
 	match := infoRe.FindSubmatch(contents)
 	if match != nil {
 		userInfo := string(match[1])
+		log.Printf("Userinfo: %s", userInfo)
 		// 阿坝 | 32岁 | 中专 | 未婚 | 170cm | 50000元以上
 
 		arr := strings.Split(userInfo, "|")
