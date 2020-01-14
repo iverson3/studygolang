@@ -13,6 +13,7 @@ var sexRe = regexp.MustCompile(`<td[^>]*><span class="grayL">性别：</span>([^
 func ParseCity(contents []byte) engine.ParseResult {
 	result := engine.ParseResult{}
 
+	// 匹配用户列表页面中的"下一页"和"其他类型的用户列表"对应的链接url
 	cityList := cityUrlRe.FindAllSubmatch(contents, -1)
 	for _, m := range cityList {
 		result.Requests = append(result.Requests, engine.Request{
@@ -21,13 +22,14 @@ func ParseCity(contents []byte) engine.ParseResult {
 		})
 	}
 
+	// 匹配用户昵称和用户详情页的url 以及用户性别
 	matches := cityRe.FindAllSubmatch(contents, -1)
 	sexMatches := sexRe.FindAllSubmatch(contents, -1)
 	for i, m := range matches {
 		user := m[2]
 		sex := sexMatches[i][1]
 
-		result.Items    = append(result.Items, "User " + string(user))
+		//result.Items    = append(result.Items, "User " + string(user))
 		result.Requests = append(result.Requests, engine.Request{
 			Url:        string(m[1]),
 			ParserFunc: func(c []byte) engine.ParseResult {
