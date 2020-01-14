@@ -10,7 +10,7 @@ var cityRe = regexp.MustCompile(`<a href="(http://album.zhenai.com/u/[0-9]+)"[^>
 var sexRe = regexp.MustCompile(`<td[^>]*><span class="grayL">性别：</span>([^<]+)</td>`)
 
 
-func ParseCity(contents []byte) engine.ParseResult {
+func ParseCity(contents []byte, url string) engine.ParseResult {
 	result := engine.ParseResult{}
 
 	// 匹配用户列表页面中的"下一页"和"其他类型的用户列表"对应的链接url
@@ -26,16 +26,43 @@ func ParseCity(contents []byte) engine.ParseResult {
 	matches := cityRe.FindAllSubmatch(contents, -1)
 	sexMatches := sexRe.FindAllSubmatch(contents, -1)
 	for i, m := range matches {
-		user := m[2]
-		sex := sexMatches[i][1]
+		username := string(m[2])
+		sex := string(sexMatches[i][1])
 
 		//result.Items    = append(result.Items, "User " + string(user))
 		result.Requests = append(result.Requests, engine.Request{
 			Url:        string(m[1]),
-			ParserFunc: func(c []byte) engine.ParseResult {
-				return ParseProfile(c, string(user), string(sex))
-			},
+			ParserFunc: ProfileParser(username, sex),
 		})
 	}
 	return result
 }
+
+func ProfileParser(username, sex string) engine.ParserFunc {
+	return func(c []byte, url string) engine.ParseResult {
+		return ParseProfile(c, url, username, sex)
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

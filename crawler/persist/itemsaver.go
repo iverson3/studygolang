@@ -2,19 +2,24 @@ package persist
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"gopkg.in/olivere/elastic.v6"
 	"log"
+	"studygolang/crawler/engine"
 )
 
-const (
-	elasticServerUrl = "http://47.107.149.234:9200"
-	eIndex = "dating_profile"
-	eType = "zhenai")
+const elasticServerUrl = "http://47.107.149.234:9200"
 
+func ItemSaver(esIndex string) (chan engine.Item, error) {
+	client, err := elastic.NewClient(
+		elastic.SetURL(elasticServerUrl),
+		elastic.SetSniff(false)) // 如果elasticsearch安装在docker中，必须设置sniff为 false
 
-func ItemSaver() chan interface{} {
-	out := make(chan interface{})
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(chan engine.Item)
 	go func() {
 		itemCount := 0
 		for {
@@ -23,7 +28,7 @@ func ItemSaver() chan interface{} {
 			item := <- out
 			log.Printf("ItemSaver: got item #%d: %v", itemCount, item)
 
-			_, err := save(item)
+			err := save(client, item, esIndex)
 			if err != nil {
 				log.Printf("ItemSaver: error saving item %v: %v", item, err)
 				continue
@@ -31,31 +36,31 @@ func ItemSaver() chan interface{} {
 			itemCount++
 		}
 	}()
-	return out
+	return out, nil
 }
 
 // 保存数据到elasticsearch
-func save(item interface{}) (id string, err error) {
-	client, err := elastic.NewClient(
-		elastic.SetURL(elasticServerUrl),
-		elastic.SetSniff(false)) // 如果elasticsearch安装在docker中，必须设置sniff为 false
-
-	if err != nil {
-		return "", err
+func save(client *elastic.Client, item engine.Item, esIndex string) error {
+	if item.Type == "" {
+		return errors.New("must supply Type")
 	}
 
-	resp, err := client.Index().
-		Index(eIndex). // 数据库
-		Type(eType). // 表名
-		BodyJson(item). // 数据 (不设置id  让系统自动生成)
-		Do(context.Background()) // 后台运行
+	indexService := client.Index().
+		Index(esIndex).   // 数据库
+		Type(item.Type). // 表名
+		BodyJson(item)   // 数据
 
-	if err != nil {
-		return "", err
+	if item.Id != "" {
+		indexService.Id(item.Id)  // 主键Id
 	}
 
-	fmt.Printf("%+v", resp)
-	return resp.Id, nil
+	_, err := indexService.Do(context.Background()) // 后台运行
+	if err != nil {
+		return err
+	}
+
+	//fmt.Printf("%+v", resp)
+	return nil
 }
 
 

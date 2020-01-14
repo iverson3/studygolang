@@ -4,30 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/olivere/elastic"
+	"gopkg.in/olivere/elastic.v6"
+	"studygolang/crawler/engine"
 	"studygolang/crawler/model"
 	"testing"
 )
 
 func TestSaver(t *testing.T) {
-	expected := model.Profile{
-		Name:       "测试用户",
-		Gender:     "男性",
-		Age:        25,
-		Height:     175,
-		Weight:     62,
-		Income:     "10000-15000",
-		Marriage:   "未婚",
-		Education:  "本科",
-		Occupation: "",
-		Hokou:      "",
-		Xinzuo:     "",
-		House:      "",
-		Car:        "",
-	}
-	id, err := save(expected)
-	if err != nil {
-		panic(err)
+	expected := engine.Item{
+		Type:    "zhenai",
+		Id:      "1626466343",
+		Url:     "https://album.zhenai.com/u/1626466343",
+		Payload: model.Profile{
+			Name:       "九月",
+			Gender:     "女士",
+			Age:        37,
+			Height:     162,
+			Weight:     0,
+			Income:     "3000元以下",
+			Marriage:   "离异",
+			Education:  "中专",
+			Occupation: "",
+			Hokou:      "",
+			Xinzuo:     "",
+			House:      "",
+			Car:        "",
+		},
 	}
 
 	// TODO: Try to start up elastic search
@@ -40,10 +42,16 @@ func TestSaver(t *testing.T) {
 		panic(err)
 	}
 
+	const index = "dating_test"
+	err = save(client, expected, index)
+	if err != nil {
+		panic(err)
+	}
+
 	resp, err := client.Get().
-		Index("dating_profile"). // 数据库
-		Type("zhenai"). // 表名
-		Id(id). // 数据 (不设置id  让系统自动生成)
+		Index(index). // 数据库
+		Type(expected.Type). // 表名
+		Id(expected.Id). // 数据 (不设置id  让系统自动生成)
 		Do(context.Background()) // 后台运行
 
 	if err != nil {
@@ -53,11 +61,10 @@ func TestSaver(t *testing.T) {
 	fmt.Printf("%+v", resp)
 	fmt.Printf("%s", resp.Source)
 
-	var actual model.Profile
-	err = json.Unmarshal(resp.Source, &actual)
-	if err != nil {
-		panic(err)
-	}
+	var actual engine.Item
+	json.Unmarshal(*resp.Source, &actual)
+	actualProfile, _ := model.FromJsonObj(actual.Payload)
+	actual.Payload = actualProfile
 
 	if actual != expected {
 		t.Errorf("got %v; expected %v", actual, expected)

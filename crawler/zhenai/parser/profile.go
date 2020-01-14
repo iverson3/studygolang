@@ -15,7 +15,9 @@ import (
 const info =`<div class="des f-cl" data-v-3c42fade>([^<]+)</div>`
 var infoRe = regexp.MustCompile(info)
 
-func ParseProfile(contents []byte, name string, sex string) engine.ParseResult {
+var idUrlRe = regexp.MustCompile(`http://album.zhenai.com/u/([\d]+)`)
+
+func ParseProfile(contents []byte, url string, name string, sex string) engine.ParseResult {
 	profile := model.Profile{}
 	profile.Name = name
 	profile.Gender = sex
@@ -53,12 +55,26 @@ func ParseProfile(contents []byte, name string, sex string) engine.ParseResult {
 
 	result := engine.ParseResult{
 		Requests: nil,
-		Items:    []interface{} {profile},
+		Items:    []engine.Item{
+			{
+				Type:    "zhenai",
+				Id:      extractString([]byte(url), idUrlRe),
+				Url:     url,
+				Payload: profile,
+			},
+		},
 	}
 	return result
 }
 
-
+func extractString(contents []byte, re *regexp.Regexp) string {
+	match := re.FindSubmatch(contents)
+	if len(match) >= 2 {
+		return string(match[1])
+	} else {
+		return ""
+	}
+}
 
 
 

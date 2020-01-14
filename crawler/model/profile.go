@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type Profile struct {
 	Name string
 	Gender string
@@ -15,3 +17,44 @@ type Profile struct {
 	House string
 	Car string
 }
+
+// 将数据结构 o  先json化 再反json化 让它变成Profile类型
+func FromJsonObj(o interface{}) (Profile, error) {
+	var profile Profile
+	s, err := json.Marshal(o)
+	if err != nil {
+		return profile, err
+	}
+
+	err = json.Unmarshal(s, &profile)
+	return profile, err
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
