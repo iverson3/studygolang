@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>珍爱网用户数据</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="mx-auto" style="width: 1000px; margin-top: 10px;">
+    <form class="form-inline" method="get">
+        <div class="form-group mx-sm-3 mb-2">
+            <input type="text" value="{{.Query}}" name="q" class="form-control" placeholder="请输入搜索条件" style="width: 500px;">
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">搜索</button>
+    </form>
+
+    <div style="margin-top: 10px;">共为你找到相关结果约为{{.Hits}}个；显示从{{.Start}}起共{{len .Items}}个</div>
+
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            {{if ge .PrevFrom 0}}
+            <li class="page-item"><a class="page-link" href="search?q={{.Query}}&from={{.PrevFrom}}">上一页</a></li>
+            {{end}}
+            {{if eq (len .Items) 10}}
+            <li class="page-item"><a class="page-link" href="search?q={{.Query}}&from={{.NextFrom}}">下一页</a></li>
+            {{end}}
+        </ul>
+    </nav>
+
+    <table class="table table-hover" style="margin-top: 20px;">
+        <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">用户名</th>
+            <th scope="col">性别</th>
+            <th scope="col">年龄</th>
+            <th scope="col">身高</th>
+            <th scope="col">体重</th>
+            <th scope="col">学历</th>
+            <th scope="col">工资</th>
+            <th scope="col">婚姻状况</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .Items}}
+            <tr>
+                <th scope="row">{{.Id}}</th>
+                <td><a href="{{.Url}}">{{.Payload.Name}}</a></td>
+                {{with .Payload}}
+                <td>{{.Gender}}</td>
+                <td>{{.Age}}</td>
+                <td>{{.Height}}</td>
+                <td>{{.Weight}}</td>
+                <td>{{.Education}}</td>
+                <td>{{.Income}}</td>
+                <td>{{.Marriage}}</td>
+                {{end}}
+            </tr>
+        {{else}}
+            <div>没有找到相关用户</div>
+        {{end}}
+        </tbody>
+    </table>
+</div>
+
+<script src="js/jquery.slim.min.js"></script>
+<script src="js/popper.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+</body>
+</html>
