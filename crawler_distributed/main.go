@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 	"studygolang/crawler/engine"
-	"studygolang/crawler/persist"
 	"studygolang/crawler/scheduler"
 	"studygolang/crawler/zhenai/parser"
 	"studygolang/crawler_distributed/config"
+	"studygolang/crawler_distributed/persist/client"
 )
 
 func main() {
-	itemChan, err := persist.ItemSaver(config.ElasticSearchIndex)
+	itemChan, err := client.ItemSaver(config.RpcServeHost)
 	if err != nil {
 		log.Printf("ItemSaver start up failed.")
 		panic(err)
@@ -20,15 +20,15 @@ func main() {
 		WorkerCount: 10,      // 启动worker协程的数量
 		ItemChan: itemChan,   // 这个channel负责送item数据给ItemSaver
 	}
-	e.Run(engine.Request{
-		Url:        config.SeedUrl,
-		ParserFunc: parser.ParseCityList,
-	})
-
 	//e.Run(engine.Request{
-	//	Url:        "http://www.zhenai.com/zhenghun/shanghai",
-	//	ParserFunc: parser.ParseCity,
+	//	Url:        config.SeedUrl,
+	//	ParserFunc: parser.ParseCityList,
 	//})
+
+	e.Run(engine.Request{
+		Url:        "http://www.zhenai.com/zhenghun/shanghai",
+		ParserFunc: parser.ParseCity,
+	})
 }
 
 

@@ -7,6 +7,7 @@ import (
 	"gopkg.in/olivere/elastic.v6"
 	"studygolang/crawler/engine"
 	"studygolang/crawler/model"
+	"studygolang/crawler_distributed/config"
 	"testing"
 )
 
@@ -35,7 +36,7 @@ func TestSaver(t *testing.T) {
 	// TODO: Try to start up elastic search
 	// here using docker go client.
 	client, err := elastic.NewClient(
-		elastic.SetURL("http://47.107.149.234:9200"),
+		elastic.SetURL(config.ElasticServerUrl),
 		elastic.SetSniff(false))
 
 	if err != nil {
@@ -43,7 +44,7 @@ func TestSaver(t *testing.T) {
 	}
 
 	const index = "dating_test"
-	err = save(client, expected, index)
+	err = Save(client, expected, index)
 	if err != nil {
 		panic(err)
 	}

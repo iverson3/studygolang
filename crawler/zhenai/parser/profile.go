@@ -10,14 +10,11 @@ import (
 )
 
 // 上海 | 51岁 | 大专 | 离异 | 160cm | 12001-20000元
-
-//const info = `<div data-v-5b109fc3="" class="des f-cl">([^|^<]+) | (\d+)岁 | ([^|^<]+) | ([^|^<]+) | (\d+)cm | ([^|^<]+元)`
-const info =`<div class="des f-cl" data-v-3c42fade>([^<]+)</div>`
-var infoRe = regexp.MustCompile(info)
-
+// `<div data-v-5b109fc3="" class="des f-cl">([^|^<]+) | (\d+)岁 | ([^|^<]+) | ([^|^<]+) | (\d+)cm | ([^|^<]+元)`
+var infoRe = regexp.MustCompile(`<div class="des f-cl" data-v-3c42fade>([^<]+)</div>`)
 var idUrlRe = regexp.MustCompile(`http://album.zhenai.com/u/([\d]+)`)
 
-func ParseProfile(contents []byte, url string, name string, sex string) engine.ParseResult {
+func parseProfile(contents []byte, url string, name string, sex string) engine.ParseResult {
 	profile := model.Profile{}
 	profile.Name = name
 	profile.Gender = sex
@@ -26,12 +23,8 @@ func ParseProfile(contents []byte, url string, name string, sex string) engine.P
 	if match != nil {
 		userInfo := string(match[1])
 		log.Printf("Userinfo: %s", userInfo)
-		// 阿坝 | 32岁 | 中专 | 未婚 | 170cm | 50000元以上
 
 		arr := strings.Split(userInfo, "|")
-		//fmt.Printf("$%s$", arr[1])
-		//profile.Age = len(arr)
-
 		for i := range arr {
 			arr[i] = strings.TrimSpace(arr[i])
 		}

@@ -1,0 +1,6 @@
+{
+  "elasticServerUrl": "http://47.107.149.234:9200",
+  "seedUrl": "http://www.zhenai.com/zhenghun",
+  "elasticSearchIndex": "dating_profile",
+  "rpcServeHost": ":1234"
+}

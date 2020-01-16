@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	// 处理静态资源文件
+	// 处理静态资源文件 (css js 图片 )
 	// 比如 http://localhost:8888/css/bootstrap.min.css   http://localhost:8888/js/bootstrap.min.js
 	http.Handle("/", http.FileServer(
 		http.Dir("crawler/frontend/view")))

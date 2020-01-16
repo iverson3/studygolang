@@ -11,6 +11,7 @@ import (
 	"studygolang/crawler/engine"
 	"studygolang/crawler/frontend/model"
 	view2 "studygolang/crawler/frontend/view"
+	"studygolang/crawler_distributed/config"
 )
 
 type SearchResultHandler struct {
@@ -18,11 +19,9 @@ type SearchResultHandler struct {
 	client *elastic.Client
 }
 
-const elasticServerUrl = "http://47.107.149.234:9200"
-
 func CreateSearchResultHandler(template string) SearchResultHandler {
 	client, err := elastic.NewClient(
-		elastic.SetURL(elasticServerUrl),
+		elastic.SetURL(config.ElasticServerUrl),
 		elastic.SetSniff(false))
 	if err != nil {
 		panic(err)

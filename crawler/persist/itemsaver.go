@@ -6,13 +6,12 @@ import (
 	"gopkg.in/olivere/elastic.v6"
 	"log"
 	"studygolang/crawler/engine"
+	"studygolang/crawler_distributed/config"
 )
-
-const elasticServerUrl = "http://47.107.149.234:9200"
 
 func ItemSaver(esIndex string) (chan engine.Item, error) {
 	client, err := elastic.NewClient(
-		elastic.SetURL(elasticServerUrl),
+		elastic.SetURL(config.ElasticServerUrl),
 		elastic.SetSniff(false)) // 如果elasticsearch安装在docker中，必须设置sniff为 false
 
 	if err != nil {
@@ -28,7 +27,7 @@ func ItemSaver(esIndex string) (chan engine.Item, error) {
 			item := <- out
 			log.Printf("ItemSaver: got item #%d: %v", itemCount, item)
 
-			err := save(client, item, esIndex)
+			err := Save(client, item, esIndex)
 			if err != nil {
 				log.Printf("ItemSaver: error saving item %v: %v", item, err)
 				continue
@@ -40,7 +39,7 @@ func ItemSaver(esIndex string) (chan engine.Item, error) {
 }
 
 // 保存数据到elasticsearch
-func save(client *elastic.Client, item engine.Item, esIndex string) error {
+func Save(client *elastic.Client, item engine.Item, esIndex string) error {
 	if item.Type == "" {
 		return errors.New("must supply Type")
 	}
