@@ -10,6 +10,7 @@ import (
 	"studygolang/crawler/scheduler"
 	"studygolang/crawler/zhenai/parser"
 	"studygolang/crawler_distributed/config"
+	"studygolang/crawler_distributed/duplicate"
 	itemSaverClient "studygolang/crawler_distributed/persist/client"
 	"studygolang/crawler_distributed/rpcsupport"
 	workerClient "studygolang/crawler_distributed/worker/client"
@@ -38,17 +39,23 @@ func main() {
 	pool := createClientPool(hostSlice)
 	processor := workerClient.CreateProcessor(pool)
 
+	redisClient, err := duplicate.CreateRedisClient(config.RedisServerUrl)
+	if err != nil {
+		panic(err)
+	}
+
 	e := engine.ConcurrentEngine{
 		Scheduler:   &scheduler.QueuedScheduler{},
-		WorkerCount: *workerCount,      // 启动worker协程的数量
-		ItemChan: itemChan,   // 这个channel负责送item数据给ItemSaver
+		WorkerCount: *workerCount,    // 启动worker协程的数量
+		ItemChan: itemChan,           // 这个channel负责送item数据给ItemSaver
 		RequestProcessor: processor,
+		RedisClient: redisClient,
 	}
+
 	//e.Run(engine.Request{
 	//	Url:    config.SeedUrl,
 	//	Parser: engine.NewFuncParser(parser.ParseCityList, config.ParseCityList),
 	//})
-
 	e.Run(engine.Request{
 		Url:    "http://www.zhenai.com/zhenghun/shanghai",
 		Parser: engine.NewFuncParser(parser.ParseCity, config.ParseCity),

@@ -1,10 +1,16 @@
 package engine
 
+import (
+	"github.com/go-redis/redis"
+	"studygolang/crawler_distributed/duplicate"
+)
+
 type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkerCount int
 	ItemChan chan Item
 	RequestProcessor Processor
+	RedisClient *redis.Client
 }
 
 type Processor func(Request) (ParseResult, error)
@@ -61,6 +67,13 @@ func (e *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult, r
 
 			// 从自己的requestChannel中收request
 			request := <- in
+
+			// redis去重
+			exist := duplicate.IsDuplicate(e.RedisClient, request.Url)
+			if exist {
+				continue
+			}
+
 			result, err := e.RequestProcessor(request)
 			if err != nil {
 				continue

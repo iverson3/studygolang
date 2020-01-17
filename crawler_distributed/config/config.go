@@ -14,6 +14,9 @@ const (
 	// elasticSearch的表名 (对应其Type字段)
 	ElasticSearchTypeZhenai = "zhenai"
 
+	// redis 服务地址 (前面不能加 http://)
+	RedisServerUrl = "47.107.149.234:6379"
+
 	// 爬虫的起始url
 	SeedUrl = "http://www.zhenai.com/zhenghun"
 
@@ -24,10 +27,11 @@ const (
 	WorkerHost1 = ":9001"
 	WorkerHost2 = ":9002"
 
+
 	// RPC EndPoints
 	ItemSaverRpc = "ItemSaverService.Save"    // itemSaver rpc service
     CrawlServiceRpc = "CrawlService.Process"  // worker rpc service
 
     // Rate limiting
-    Qps = 50            // 限制Fetcher发起请求的频率
+    Qps = 5            // 限制Fetcher发起请求的频率
 )
