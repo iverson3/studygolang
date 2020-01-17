@@ -3,15 +3,20 @@ package fetcher
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"studygolang/crawler_distributed/config"
 	"time"
 )
 
 // 使用定时器channel限制请求的频率
-var rateLimiter = time.Tick(50 * time.Millisecond)
+// 减小给别人服务器的压力，防止被封客户端ip
+var rateLimiter = time.Tick(time.Second / config.Qps)
 
 func Fetch(url string) ([]byte, error) {
 	<- rateLimiter
+	log.Printf("Fetching url %s", url)
+
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

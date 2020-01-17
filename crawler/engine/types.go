@@ -1,7 +1,10 @@
 package engine
 
+import "studygolang/crawler_distributed/config"
+
 type ParserFunc func(contents []byte, url string) ParseResult 
 
+// Parser接口的实现者有： NilParser  FuncParser  ProfileParser
 type Parser interface {
 	Parse(contents []byte, url string) ParseResult
 	Serialize() (name string, args interface{})    // 序列化ParserFunc
@@ -31,7 +34,7 @@ func (n NilParser) Parse(_ []byte, _ string) ParseResult {
 }
 
 func (n NilParser) Serialize() (name string, args interface{}) {
-	return "NilParser", nil
+	return config.NilParser, nil
 }
 
 

@@ -7,17 +7,17 @@ import (
 	"strings"
 	"studygolang/crawler/engine"
 	"studygolang/crawler/model"
+	"studygolang/crawler_distributed/config"
 )
 
 // 上海 | 51岁 | 大专 | 离异 | 160cm | 12001-20000元
-// `<div data-v-5b109fc3="" class="des f-cl">([^|^<]+) | (\d+)岁 | ([^|^<]+) | ([^|^<]+) | (\d+)cm | ([^|^<]+元)`
 var infoRe = regexp.MustCompile(`<div class="des f-cl" data-v-3c42fade>([^<]+)</div>`)
-var idUrlRe = regexp.MustCompile(`http://album.zhenai.com/u/([\d]+)`)
+var idUrlRe = regexp.MustCompile(`http[s]?://album.zhenai.com/u/([\d]+)`)
 
-func parseProfile(contents []byte, url string, name string, sex string) engine.ParseResult {
+func parseProfile(contents []byte, url string, baseInfo ProfileParser) engine.ParseResult {
 	profile := model.Profile{}
-	profile.Name = name
-	profile.Gender = sex
+	profile.Name   = baseInfo.UserName
+	profile.Gender = baseInfo.Sex
 
 	match := infoRe.FindSubmatch(contents)
 	if match != nil {
@@ -50,7 +50,7 @@ func parseProfile(contents []byte, url string, name string, sex string) engine.P
 		Requests: nil,
 		Items:    []engine.Item{
 			{
-				Type:    "zhenai",
+				Type:    config.ElasticSearchTypeZhenai,
 				Id:      extractString([]byte(url), idUrlRe),
 				Url:     url,
 				Payload: profile,

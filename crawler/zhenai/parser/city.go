@@ -3,6 +3,7 @@ package parser
 import (
 	"regexp"
 	"studygolang/crawler/engine"
+	"studygolang/crawler_distributed/config"
 )
                                        // 下一页 href="http://www.zhenai.com/zhenghun/zhenjiang/2"
 var cityUrlRe = regexp.MustCompile(`href="(http://www.zhenai.com/zhenghun/[^"]+)"`)
@@ -18,7 +19,7 @@ func ParseCity(contents []byte, url string) engine.ParseResult {
 	for _, m := range cityList {
 		result.Requests = append(result.Requests, engine.Request{
 			Url: string(m[1]),
-			Parser: engine.NewFuncParser(ParseCity, "ParseCity"),
+			Parser: engine.NewFuncParser(ParseCity, config.ParseCity),
 		})
 	}
 
@@ -31,31 +32,37 @@ func ParseCity(contents []byte, url string) engine.ParseResult {
 
 		//result.Items    = append(result.Items, "User " + string(user))
 		result.Requests = append(result.Requests, engine.Request{
-			Url:        string(m[1]),
-			ParserFunc: ProfileParser(username, sex),
-		})
+			Url:    string(m[1]),
+			Parser: NewProfileParser(username, sex),
+	})
 	}
 	return result
 }
 
 
-type  ProfileParser struct {
-	userName string
-	sex string
+type ProfileParser struct {
+	UserName string
+	Sex string
 }
 
 func (p *ProfileParser) Parse(contents []byte, url string) engine.ParseResult {
-	return parseProfile(contents, url, p.userName, p.sex)
+	return parseProfile(contents, url, ProfileParser{
+		UserName: p.UserName,
+		Sex:      p.Sex,
+	})
 }
 
 func (p *ProfileParser) Serialize() (name string, args interface{}) {
-	return "ProfileParser", p.userName, p.sex
+	return config.ParseProfile, ProfileParser{
+		UserName: p.UserName,
+		Sex:      p.Sex,
+	}
 }
 
 func NewProfileParser(userName, sex string) *ProfileParser {
 	return &ProfileParser{
-		userName: userName,
-		sex:      sex,
+		UserName: userName,
+		Sex:      sex,
 	}
 }
 

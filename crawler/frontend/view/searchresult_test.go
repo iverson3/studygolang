@@ -19,7 +19,7 @@ func TestTemplate(t *testing.T)  {
 	item := engine.Item{
 		Type:    "zhenai",
 		Id:      "1626466343",
-		Url:     "https://album.zhenai.com/u/1626466343",
+		Url:     "http://album.zhenai.com/u/1626466343",
 		Payload: common.Profile{
 			Name:       "九月",
 			Gender:     "女士",

@@ -4,7 +4,10 @@ type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkerCount int
 	ItemChan chan Item
+	RequestProcessor Processor
 }
+
+type Processor func(Request) (ParseResult, error)
 
 type Scheduler interface {
 	ReadyNotifier
@@ -27,7 +30,7 @@ func (e *ConcurrentEngine) Run(seeds ...Request)  {
 		// 从scheduler获取当前马上要创建的worker自己专属的requestChannel
 		in := e.Scheduler.WorkerChan()
 		// 每个worker有自己的requestChannel  用来收request
-		createWorker(in, out, e.Scheduler)
+		e.createWorker(in, out, e.Scheduler)
 	}
 
 	for _, r := range seeds {
@@ -49,7 +52,7 @@ func (e *ConcurrentEngine) Run(seeds ...Request)  {
 	}
 }
 
-func createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier)  {
+func (e *ConcurrentEngine) createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier)  {
 	go func() {
 		for {
 			// 代码解释： 这里当前这个worker准备好接受request之后 就调用WorkerReady()告诉scheduler自己已准备好 并将自己的requestChannel给它
@@ -58,7 +61,7 @@ func createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier)  {
 
 			// 从自己的requestChannel中收request
 			request := <- in
-			result, err := worker(request)
+			result, err := e.RequestProcessor(request)
 			if err != nil {
 				continue
 			}
