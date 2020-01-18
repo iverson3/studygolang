@@ -35,31 +35,31 @@ func main() {
 		panic(err)
 	}
 
+	redisClientChan, count := duplicate.CreateRedisClientPool(config.RedisServerUrl, 5)
+	if count == 0 {
+		panic("Can not connected to redis server.")
+	}
+
 	hostSlice := strings.Split(*workerHosts, ",")
 	pool := createClientPool(hostSlice)
 	processor := workerClient.CreateProcessor(pool)
-
-	redisClient, err := duplicate.CreateRedisClient(config.RedisServerUrl)
-	if err != nil {
-		panic(err)
-	}
 
 	e := engine.ConcurrentEngine{
 		Scheduler:   &scheduler.QueuedScheduler{},
 		WorkerCount: *workerCount,    // 启动worker协程的数量
 		ItemChan: itemChan,           // 这个channel负责送item数据给ItemSaver
 		RequestProcessor: processor,
-		RedisClient: redisClient,
+		RedisClientChan: redisClientChan,
 	}
 
-	//e.Run(engine.Request{
-	//	Url:    config.SeedUrl,
-	//	Parser: engine.NewFuncParser(parser.ParseCityList, config.ParseCityList),
-	//})
 	e.Run(engine.Request{
-		Url:    "http://www.zhenai.com/zhenghun/shanghai",
-		Parser: engine.NewFuncParser(parser.ParseCity, config.ParseCity),
+		Url:    config.SeedUrl,
+		Parser: engine.NewFuncParser(parser.ParseCityList, config.ParseCityList),
 	})
+	//e.Run(engine.Request{
+	//	Url:    "http://www.zhenai.com/zhenghun/shanghai",
+	//	Parser: engine.NewFuncParser(parser.ParseCity, config.ParseCity),
+	//})
 }
 
 func createClientPool(hosts []string) chan *rpc.Client {
