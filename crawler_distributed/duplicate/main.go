@@ -19,7 +19,10 @@ func Redis() {
 		panic(err)
 	}
 
-	result, err := client.HGet("crawler_zhenai_profile_url_set", "http://www.zhenai.com/zhenghun/shanghai").Result()
+	hLen := client.HLen("crawler_zhenai_profile_url_set")
+	log.Printf("len: %v", hLen)
+
+	result, err := client.HGet("crawler_zhenai_profile_url_set", "http://album.zhenai.com/u/1173210456").Result()
 	if err == nil {
 		log.Println(result)
 	} else {
