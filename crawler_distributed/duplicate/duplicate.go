@@ -14,19 +14,22 @@ func IsDuplicate(clientChan chan *redis.Client, url string) bool {
 	// 查重只查用户url
 	match := idUrlRe.FindStringSubmatch(url)
 	if len(match) == 0 {
+		log.Printf("not profile url: %s", url)
 		return false
 	}
 
 	client := <- clientChan
 	_, err := client.HGet(key, url).Result()
 	if err == nil {
+		log.Printf("yes yes yes yes yes url: %s", url)
 		return true
 	} else {
+		log.Printf("xxxxxxxxxxxxxxxxxxxxxxxx url: %s", url)
 		// 不存在redis中 则存入
-		err = client.HSet(key, url, "1").Err()
-		if err != nil {
-			log.Printf("redis hash-set error: %v", err)
-		}
+		//err = client.HSet(key, url, "1").Err()
+		//if err != nil {
+		//	log.Printf("redis hash-set error: %v", err)
+		//}
 		return false
 	}
 }

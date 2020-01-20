@@ -52,14 +52,14 @@ func main() {
 		RedisClientChan: redisClientChan,
 	}
 
-	e.Run(engine.Request{
-		Url:    config.SeedUrl,
-		Parser: engine.NewFuncParser(parser.ParseCityList, config.ParseCityList),
-	})
 	//e.Run(engine.Request{
-	//	Url:    "http://www.zhenai.com/zhenghun/shanghai",
-	//	Parser: engine.NewFuncParser(parser.ParseCity, config.ParseCity),
+	//	Url:    config.SeedUrl,
+	//	Parser: engine.NewFuncParser(parser.ParseCityList, config.ParseCityList),
 	//})
+	e.Run(engine.Request{
+		Url:    "http://www.zhenai.com/zhenghun/shanghai",
+		Parser: engine.NewFuncParser(parser.ParseCity, config.ParseCity),
+	})
 }
 
 func createClientPool(hosts []string) chan *rpc.Client {
