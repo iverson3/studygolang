@@ -1,6 +1,7 @@
 package duplicate
 
 import (
+	"context"
 	"github.com/go-redis/redis"
 	"log"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 // redis服务实现url去重
 const key = "crawler_zhenai_profile_url_set"
 var idUrlRe = regexp.MustCompile(`http[s]?://album.zhenai.com/u/[\d]+`)
+var ctx = context.Background()
 
 func IsDuplicate(clientChan chan *redis.Client, url string) bool {
 	// 查重只查用户url
@@ -19,7 +21,7 @@ func IsDuplicate(clientChan chan *redis.Client, url string) bool {
 	}
 
 	client := <- clientChan
-	_, err := client.HGet(key, url).Result()
+	_, err := client.HGet(ctx, key, url).Result()
 	if err == nil {
 		log.Printf("yes yes yes yes yes url: %s", url)
 		return true
@@ -44,7 +46,7 @@ func CreateRedisClientPool(host string, count int) (chan *redis.Client, int) {
 		})
 		//defer client.Close()
 
-		pong, err := client.Ping().Result()
+		pong, err := client.Ping(ctx).Result()
 		if err != nil || pong != "PONG" {
 			log.Printf("Error connecting to %s: %v", host, err)
 		} else {
@@ -81,13 +83,13 @@ func IsDuplicate2(client *redis.Client, url string) bool {
 		return false
 	}
 
-	_, err := client.HGet(key, url).Result()
+	_, err := client.HGet(ctx, key, url).Result()
 	if err == nil {
 		log.Printf("url is exist-------------; %s", url)
 		return true
 	} else {
 		// 不存在redis中 则存入
-		err = client.HSet(key, url, "1").Err()
+		err = client.HSet(ctx, key, url, "1").Err()
 		if err != nil {
 			log.Printf("redis hash-set error: %v", err)
 		}
@@ -103,7 +105,7 @@ func CreateRedisClient2(host string) (*redis.Client, error) {
 	})
 	//defer client.Close()
 
-	pong, err := client.Ping().Result()
+	pong, err := client.Ping(ctx).Result()
 	if err != nil || pong != "PONG" {
 		log.Printf("Error connecting to %s: %v", host, err)
 		return nil, err

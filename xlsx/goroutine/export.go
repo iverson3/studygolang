@@ -87,7 +87,7 @@ func createSheet(wg *sync.WaitGroup, titleRowInfo []string, data []User, i int) 
 }
 
 func getDataFromDb() []User {
-	db, err := sql.Open("mysql", "root:13396095889@tcp(localhost:3306)/test?charset=utf8")
+	db, err := sql.Open("mysql", "root:13396095889@tcp(47.107.149.234:3306)/test?charset=utf8")
 	checkErr(err)
 
 	rows, err := db.Query("select * from user")

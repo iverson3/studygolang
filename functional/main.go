@@ -1,11 +1,11 @@
 package main
 
 import (
-	"awesomeProject1/functional/fib"
 	"bufio"
 	"fmt"
 	"io"
 	"strings"
+	"studygolang/functional/fib"
 )
 
 // 函数是一等公民, 变量 参数 返回值都可以是函数;

@@ -1,14 +1,16 @@
 package main
 
 import (
-	"awesomeProject1/functional/fib"
 	"bufio"
 	"fmt"
 	"os"
+	"studygolang/functional/fib"
 )
 
 // defer 使用场景：
 // 文件的打开关闭  连接的打开断开  Lock/Unlock
+// defer语句遵循堆栈的先入后出规则
+// 当defer将语句放入栈中时，也会将相关的变量的值拷贝到栈中，不受后续代码对相关变量修改的影响
 
 func tryDefer()  {
 	defer fmt.Println(1)

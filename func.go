@@ -33,8 +33,11 @@ func div(a, b int) (q, r int)  {
 	return
 }
 
+// 自定义数据类型 (这里opFuncType是一个自定义的函数类型)
+type opFuncType func(int, int) int
+
 // 函数作为函数的参数
-func apply(op func(int, int) int, a, b int) int {
+func apply(op opFuncType, a, b int) int {
 	p := reflect.ValueOf(op).Pointer()
 	opName := runtime.FuncForPC(p).Name()
 	fmt.Printf("Calling function %s with args (%d, %d)\n", opName, a, b)
