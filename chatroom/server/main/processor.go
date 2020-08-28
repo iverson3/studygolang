@@ -49,6 +49,9 @@ func (this *Processor) ServerProcessMess(mess *common.Message) (err error) {
 		// 注册处理
 		up := &processes.UserProcess{Conn: this.Conn}
 		return up.ServerProcessRegister(mess)
+	case common.GroupSmsMesType:
+		up := &processes.SmsProcess{Conn: this.Conn}
+		return up.SendGroupSmsMessage(mess)
 	default:
 		fmt.Println("message: ", mess)
 		return errors.New("未知的消息类型：" + mess.Type)

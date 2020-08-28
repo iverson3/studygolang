@@ -71,17 +71,20 @@ func processServerMess(conn net.Conn) {
 		}
 
 		// 根据消息内容 进行不同的逻辑处理
-		//fmt.Println("message from server: ", mess)
-		fmt.Println("收到来自服务端的好友上线通知消息")
-
 		switch mess.Type {
 		case common.NotifyUserStatusMesType:
+			fmt.Println("收到来自服务端的好友上线通知消息")
 			var notifyMess common.NotifyUserStatusMes
 			err := json.Unmarshal([]byte(mess.Data), &notifyMess)
 			if err != nil {
 				fmt.Println("反序列化消息出错")
 			} else {
 				UpdateOnlineUserList(&notifyMess)
+			}
+		case common.GroupSmsMesType:
+			err := ShowGroupSms(&mess)
+			if err != nil {
+				fmt.Println("显示群发消息失败！error: ", err.Error())
 			}
 		default:
 			fmt.Println("未知的消息类型")
