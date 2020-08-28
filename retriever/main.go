@@ -1,8 +1,8 @@
 package main
 
 import (
-	"awesomeProject1/retriever/mock"
-	real2 "awesomeProject1/retriever/real"
+	"studygolang/retriever/mock"
+	real2 "studygolang/retriever/real"
 	"fmt"
 	"time"
 )

@@ -14,7 +14,8 @@ func generator() chan int {
 	go func() {
 		i := 0
 		for {
-			time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond)
+			//time.Sleep(time.Duration(rand.Intn(1500)) * time.Millisecond)
+			time.Sleep(time.Duration(rand.Intn(200)) * time.Millisecond)
 			out <- i
 			i++
 		}
@@ -34,7 +35,8 @@ func worker(id int, c chan int) {
 	for {
 		n := <-c
 		// 通过Sleep()降低worker收数据的速度
-		time.Sleep(1 * time.Second)
+		//time.Sleep(1 * time.Second)
+		time.Sleep(100 * time.Millisecond)
 		fmt.Printf("Worker %d received %d\n", id, n)
 	}
 }
@@ -56,7 +58,7 @@ func main() {
 		var activeValue int
 		if len(values) > 0 {
 			activeWorker = worker
-			activeValue = values[0]
+			activeValue = values[0]  // 每次从队列中取一个数据，准备发给worker的channel
 		}
 		// 800毫秒的倒计时, 且每次循环倒计时都会被重置
 		timeOutChan := time.After(800 * time.Millisecond)
@@ -77,6 +79,8 @@ func main() {
 		case <-tm:
 			fmt.Print("bye.")
 			return
+		//default:
+		//	fmt.Println("default case------")
 		}
 	}
 }

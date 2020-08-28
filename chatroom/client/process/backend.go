@@ -1,0 +1,90 @@
+package process
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net"
+	"os"
+	"strings"
+	"studygolang/chatroom/client/utils"
+	common "studygolang/chatroom/common/message"
+	"studygolang/chatroom/server/model"
+)
+
+func ShowMenu() {
+	fmt.Println("---------------聊天系统主界面----------------")
+	fmt.Println("\t\t 1.显示在线用户列表")
+	fmt.Println("\t\t 2.群发消息")
+	fmt.Println("\t\t 3.个人私聊")
+	fmt.Println("\t\t 4.信息列表")
+	fmt.Println("\t\t 5.退出登录")
+	fmt.Println("\t\t 6.退出系统")
+
+	smsProcess := &SmsProcess{}
+	var key int
+	for {
+		fmt.Println("\t\t 请选择 (1-6)：")
+		_, _ = fmt.Scanf("%d\n", &key)
+		switch key {
+		case 1:
+			ShowOnlineUserList()
+		case 2:
+			var content string
+			fmt.Println("请输入需要群发的消息内容:")
+			_, _ = fmt.Scanf("%s\n", &content)
+
+			err := smsProcess.SendGroupSms(content)
+			if err != nil {
+				fmt.Println("群发消息失败；error: ", err.Error())
+			}
+		case 3:
+			fmt.Println("3")
+		case 4:
+			fmt.Println("4")
+		case 5:
+			fmt.Println("5")
+		case 6:
+			fmt.Println("6")
+			os.Exit(0)
+		default:
+			println("输入有误，请重新输入")
+		}
+	}
+}
+
+// 在后台保持跟服务端之间的通讯
+// 随时准备接收服务端发送过来的数据 (比如用户上线下线提醒 消息推送提醒等等)
+func processServerMess(conn net.Conn) {
+	tf := &utils.Transfer{Conn: conn}
+	for {
+		mess, err := tf.ReadPkg()
+		if err != nil {
+			if err == io.EOF || strings.Contains(err.Error(), "close") {
+				err = model.ERROR_SERVER_CLOSE_CONNECTION
+			}
+			fmt.Println("接收服务端的消息出错，error：", err.Error())
+
+			// 尝试重连服务器，恢复与服务器的通讯
+			// 服务器断开连接 有两种情况： 服务器停止运行 | 网络故障意外断开了连接
+			return
+		}
+
+		// 根据消息内容 进行不同的逻辑处理
+		//fmt.Println("message from server: ", mess)
+		fmt.Println("收到来自服务端的好友上线通知消息")
+
+		switch mess.Type {
+		case common.NotifyUserStatusMesType:
+			var notifyMess common.NotifyUserStatusMes
+			err := json.Unmarshal([]byte(mess.Data), &notifyMess)
+			if err != nil {
+				fmt.Println("反序列化消息出错")
+			} else {
+				UpdateOnlineUserList(&notifyMess)
+			}
+		default:
+			fmt.Println("未知的消息类型")
+		}
+	}
+}
