@@ -27,13 +27,28 @@ func (this *Processor) mainProcess() (err error) {
 			// 判断错误是否是客户端关闭了连接
 			if err == io.EOF || strings.Contains(err.Error(), "close") {
 				err = model.ERROR_CLIENT_CLOSE_CONNECTION
-			}
 
-			// 客户端断开连接，则将当前用户从在线用户列表中移除
-			//_, _ = process2.RemoveUserFromOnlineUserList()
-			return err
+				// 客户端断开连接，则先通知其他用户,当前用户下线的消息
+				up, _ := processes.UserManager.GetOnlineUserByAddr(this.Conn.RemoteAddr().String())
+				if up == nil {
+					return err
+				}
+				user := &model.User{
+					UserId:     up.UserId,
+					UserName:   up.UserName,
+				}
+				up.NotifyOtherOfflineUsers(user)
+
+				// 客户端断开连接，则将当前用户从在线用户列表中移除
+				processes.UserManager.DelOnlineUserByAddr(this.Conn.RemoteAddr().String())
+
+				return err
+			}
+			continue
 		}
 
+		// 可以考虑使用go携程来处理
+		// 或者开一个携程先处理并组装数据 再向消息channel里写入需要发送的数据，然后由另一个运行中的携程来从channel中取出数据 发给指定的用户(群发或私发)
 		err = this.ServerProcessMess(&message)
 	}
 }

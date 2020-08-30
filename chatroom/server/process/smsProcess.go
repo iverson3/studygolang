@@ -24,6 +24,7 @@ func (this *SmsProcess) SendGroupSmsMessage(mes *common.Message) (err error) {
 		return
 	}
 
+	userManager.rwMutex.RLock()
 	for uid, up := range userManager.onlineUsers {
 		if uid == groupSms.UserId {
 			continue
@@ -33,6 +34,7 @@ func (this *SmsProcess) SendGroupSmsMessage(mes *common.Message) (err error) {
 			fmt.Println("发送失败，userid: ", uid)
 		}
 	}
+	userManager.rwMutex.RUnlock()
 	return
 }
 

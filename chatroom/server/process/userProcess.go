@@ -14,6 +14,8 @@ type UserProcess struct {
 	UserName string
 	// 当前用户客户端与服务端所建立的连接
 	Conn net.Conn
+	// 客户端连接地址 (ip+port)
+	ConnAddr string
 }
 
 // 根据错误类型判断并返回对应的错误码和错误信息
@@ -63,6 +65,7 @@ func (this *UserProcess) ServerProcessLogin(mess *common.Message) (err error) {
 
 		this.UserId = curUser.UserId
 		this.UserName = curUser.UserName
+		this.ConnAddr = this.Conn.RemoteAddr().String()
 		userManager.AddOnlineUser(this)
 		go this.NotifyOtherOnlineUsers(curUser)
 
@@ -129,30 +132,42 @@ func (this *UserProcess) ServerProcessRegister(mess *common.Message) (err error)
 // 通知其他用户 当前上线用户的在线状态
 // 当前用户(userId)通知其他所有在线用户-自己上线了
 func (this *UserProcess) NotifyOtherOnlineUsers(user *model.User) {
-	data, err := assembleNotifyUserOnlineData(user)
+	data, err := assembleNotifyUserStatusData(user, 1)
 	if err != nil {
 		return
 	}
-
-	// 将用户上线的通知信息数据广播给所有已在线的用户
-	for uid, up := range userManager.onlineUsers {
-		if uid != user.UserId {
-			err = up.NotifyMeOnline(data)
-			if err != nil {
-				fmt.Println("通知用户上线失败，失败的用户: ", uid)
-			}
-		}
-	}
+	_ = this.NotifyOnlineUserStatusChange(user, data)
 }
 
-func assembleNotifyUserOnlineData(user *model.User) (data []byte, err error) {
+// 通知其他用户 当前用户的下线状态
+// 当前用户(userId)通知其他所有在线用户-自己下线了
+func (this *UserProcess) NotifyOtherOfflineUsers(user *model.User) {
+	data, err := assembleNotifyUserStatusData(user, 2)
+	if err != nil {
+		return
+	}
+	_ = this.NotifyOnlineUserStatusChange(user, data)
+}
+
+
+// 组装用户上下线状态消息数据
+func assembleNotifyUserStatusData(user *model.User, status int) (data []byte, err error) {
 	var mess common.Message
 	mess.Type = common.NotifyUserStatusMesType
 
 	var notifyMess common.NotifyUserStatusMes
 	notifyMess.UserId = user.UserId
 	notifyMess.UserName = user.UserName
-	notifyMess.Status = common.UserOnline
+	switch status {
+	case 1:
+		notifyMess.Status = common.UserOnline
+	case 2:
+		notifyMess.Status = common.UserOffline
+	case 3:
+		notifyMess.Status = common.UserBusy
+	default:
+		// 未知状态
+	}
 
 	bytes, err := json.Marshal(notifyMess)
 	if err != nil {
@@ -163,7 +178,16 @@ func assembleNotifyUserOnlineData(user *model.User) (data []byte, err error) {
 	return json.Marshal(mess)
 }
 
-func (this *UserProcess) NotifyMeOnline(data []byte) (err error) {
-	tf := &utils.Transfer{Conn: this.Conn}
-	return tf.WritePkg(data)
+// 将用户状态变化的通知信息数据广播给所有已在线的用户
+func (this *UserProcess) NotifyOnlineUserStatusChange(user *model.User, data []byte) (err error) {
+	for uid, up := range userManager.onlineUsers {
+		if uid != user.UserId {
+			tf := &utils.Transfer{Conn: up.Conn}
+			err = tf.WritePkg(data)
+			if err != nil {
+				fmt.Println("通知用户上线失败，失败的用户: ", uid)
+			}
+		}
+	}
+	return
 }
