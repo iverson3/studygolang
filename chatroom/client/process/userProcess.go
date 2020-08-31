@@ -76,7 +76,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 		// 初始化CurUser
 		CurUser.Conn = conn
 		CurUser.UserId = userId
-		CurUser.UserName = "xxx" // 登录成功后 服务端还需要返回用户昵称信息
+		CurUser.UserName = loginRes.UserName
 		CurUser.UserStatus = common.UserOnline
 
 		for i, v := range loginRes.OnlineUserList {

@@ -10,6 +10,7 @@ const (
 	RegisterResMesType      = "RegisterResMes"
 	NotifyUserStatusMesType = "NotifyUserStatusMes"
 	GroupSmsMesType         = "GroupSmsMes"
+	PersonalSmsMesType      = "PersonalSmsMes"
 )
 
 const (
@@ -37,6 +38,7 @@ type LoginMes struct {
 // 登录结果消息
 type LoginResMes struct {
 	ResponseMes
+	UserName string `json:"user_name"`
 	OnlineUserList map[int]string  // 在线用户列表数据 ( 结构: map[userId]userName )
 }
 
@@ -64,7 +66,7 @@ type GroupSmsMes struct {
 	SendTime string `json:"send_time"`
 }
 // 个人聊天消息
-type SmsMes struct {
+type PersonalSmsMes struct {
 	From model.User `json:"from"`
 	To model.User `json:"to"`
 	Content string `json:"content"`

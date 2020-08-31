@@ -25,6 +25,7 @@ func ShowMenu() {
 	var key int
 	for {
 		fmt.Println("\t\t 请选择 (1-6)：")
+		// 需要处理用户输入字符串的情况
 		_, _ = fmt.Scanf("%d\n", &key)
 		switch key {
 		case 1:
@@ -39,7 +40,28 @@ func ShowMenu() {
 				fmt.Println("群发消息失败；error: ", err.Error())
 			}
 		case 3:
-			fmt.Println("3")
+			var uid int
+			var content string
+			fmt.Println("请输入私聊用户的Id:")
+			for {
+				_, _ = fmt.Scanf("%d\n", &uid)
+				if ExistUserInUserList(uid) && uid != CurUser.UserId {
+					break
+				}
+				if !ExistUserInUserList(uid) {
+					fmt.Println("该用户不存在或不在线，请重新输入私聊用户的Id:")
+				}
+				if uid == CurUser.UserId {
+					fmt.Println("不能跟自己私聊，请重新输入私聊用户的Id:")
+				}
+			}
+			fmt.Println("请输入需要发送的消息内容:")
+			_, _ = fmt.Scanf("%s\n", &content)
+
+			err := smsProcess.SendPersonalSms(uid, content)
+			if err != nil {
+				fmt.Println("私发消息失败；error: ", err.Error())
+			}
 		case 4:
 			fmt.Println("4")
 		case 5:
@@ -73,7 +95,7 @@ func processServerMess(conn net.Conn) {
 		// 根据消息内容 进行不同的逻辑处理
 		switch mess.Type {
 		case common.NotifyUserStatusMesType:
-			fmt.Println("收到来自服务端的好友上线通知消息")
+			fmt.Println("收到来自服务端的好友上下线通知消息")
 			var notifyMess common.NotifyUserStatusMes
 			err := json.Unmarshal([]byte(mess.Data), &notifyMess)
 			if err != nil {
@@ -85,6 +107,11 @@ func processServerMess(conn net.Conn) {
 			err := ShowGroupSms(&mess)
 			if err != nil {
 				fmt.Println("显示群发消息失败！error: ", err.Error())
+			}
+		case common.PersonalSmsMesType:
+			err := ShowPersonalSms(&mess)
+			if err != nil {
+				fmt.Println("显示私发消息失败！error: ", err.Error())
 			}
 		default:
 			fmt.Println("未知的消息类型")

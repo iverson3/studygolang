@@ -8,17 +8,20 @@ import (
 // UserManager实例在服务端有且仅有一个
 // 所以直接定义为全局变量，供需要的地方使用
 var (
-	userManager *UserManager
+	MyUserManager *UserManager
 )
 
 // UserManager实现对在线用户的管理
 type UserManager struct {
+	// map是非线程安全的，并发读写操作时 可能会出现错误；可用并发安全的sync.Map代替
+	// https://www.cnblogs.com/qcrao-2018/p/12833787.html
 	onlineUsers map[int]*UserProcess
-	rwMutex sync.RWMutex  // 读写锁，保证并发中对onlineUsers读写操作的安全
+	// 读写锁，保证并发中对onlineUsers读写操作的安全
+	rwMutex sync.RWMutex
 }
 
 func init() {
-	userManager = &UserManager{
+	MyUserManager = &UserManager{
 		onlineUsers: make(map[int]*UserProcess, 1024),
 	}
 }
@@ -32,9 +35,9 @@ func (this *UserManager) AddOnlineUser(up *UserProcess) {
 
 // 通过用户Id移除指定的在线用户
 func (this *UserManager) DelOnlineUser(userId int) {
-	this.rwMutex.Lock()
+	//this.rwMutex.Lock()
 	delete(this.onlineUsers, userId)
-	this.rwMutex.Unlock()
+	//this.rwMutex.Unlock()
 }
 // 通过ConnAddr移除指定的在线用户
 func (this *UserManager) DelOnlineUserByAddr(connAddr string) {
@@ -56,6 +59,7 @@ func (this *UserManager) GetAllOnlineUser() map[int]*UserProcess {
 
 // 获取指定的用户的UserProcess
 func (this *UserManager) GetOnlineUserById(userId int) (*UserProcess, error) {
+
 	this.rwMutex.RLock()
 	up, ok := this.onlineUsers[userId]
 	this.rwMutex.RUnlock()

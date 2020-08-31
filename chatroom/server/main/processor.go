@@ -29,7 +29,7 @@ func (this *Processor) mainProcess() (err error) {
 				err = model.ERROR_CLIENT_CLOSE_CONNECTION
 
 				// 客户端断开连接，则先通知其他用户,当前用户下线的消息
-				up, _ := processes.UserManager.GetOnlineUserByAddr(this.Conn.RemoteAddr().String())
+				up, _ := processes.MyUserManager.GetOnlineUserByAddr(this.Conn.RemoteAddr().String())
 				if up == nil {
 					return err
 				}
@@ -40,8 +40,7 @@ func (this *Processor) mainProcess() (err error) {
 				up.NotifyOtherOfflineUsers(user)
 
 				// 客户端断开连接，则将当前用户从在线用户列表中移除
-				processes.UserManager.DelOnlineUserByAddr(this.Conn.RemoteAddr().String())
-
+				processes.MyUserManager.DelOnlineUserByAddr(this.Conn.RemoteAddr().String())
 				return err
 			}
 			continue
@@ -50,6 +49,9 @@ func (this *Processor) mainProcess() (err error) {
 		// 可以考虑使用go携程来处理
 		// 或者开一个携程先处理并组装数据 再向消息channel里写入需要发送的数据，然后由另一个运行中的携程来从channel中取出数据 发给指定的用户(群发或私发)
 		err = this.ServerProcessMess(&message)
+		if err != nil {
+			fmt.Printf("处理客户端消息出错！error: %s \n", err.Error())
+		}
 	}
 }
 
@@ -67,6 +69,9 @@ func (this *Processor) ServerProcessMess(mess *common.Message) (err error) {
 	case common.GroupSmsMesType:
 		up := &processes.SmsProcess{Conn: this.Conn}
 		return up.SendGroupSmsMessage(mess)
+	case common.PersonalSmsMesType:
+		up := &processes.SmsProcess{Conn: this.Conn}
+		return up.SendPersonalSmsMessage(mess)
 	default:
 		fmt.Println("message: ", mess)
 		return errors.New("未知的消息类型：" + mess.Type)

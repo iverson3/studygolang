@@ -66,17 +66,18 @@ func (this *UserProcess) ServerProcessLogin(mess *common.Message) (err error) {
 		this.UserId = curUser.UserId
 		this.UserName = curUser.UserName
 		this.ConnAddr = this.Conn.RemoteAddr().String()
-		userManager.AddOnlineUser(this)
+		MyUserManager.AddOnlineUser(this)
 		go this.NotifyOtherOnlineUsers(curUser)
 
 		// 构建在线用户列表数据，返回给客户端
 		userList := make(map[int]string)
-		users := userManager.GetAllOnlineUser()
+		users := MyUserManager.GetAllOnlineUser()
 
 		for _, user := range users {
 			userList[user.UserId] = user.UserName
 		}
 		loginResMess.OnlineUserList = userList
+		loginResMess.UserName = curUser.UserName
 	}
 
 	bytes, err := json.Marshal(loginResMess)
@@ -180,7 +181,7 @@ func assembleNotifyUserStatusData(user *model.User, status int) (data []byte, er
 
 // 将用户状态变化的通知信息数据广播给所有已在线的用户
 func (this *UserProcess) NotifyOnlineUserStatusChange(user *model.User, data []byte) (err error) {
-	for uid, up := range userManager.onlineUsers {
+	for uid, up := range MyUserManager.onlineUsers {
 		if uid != user.UserId {
 			tf := &utils.Transfer{Conn: up.Conn}
 			err = tf.WritePkg(data)

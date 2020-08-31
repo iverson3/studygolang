@@ -7,7 +7,7 @@ import (
 	"studygolang/chatroom/server/model"
 )
 
-// 客户端维护的在线好友列表
+// 客户端维护的在线好友列表 (map是非线程安全的)
 var onlineUserList = make(map[int]*model.User, 10)
 // 全局的客户端当前用户model
 var CurUser model2.CurUser
@@ -35,6 +35,12 @@ func UpdateOnlineUserList(notifyMess *common.NotifyUserStatusMes) {
 	ShowOnlineUserList()
 }
 
+// 判断用户列表中是否存在指定的用户
+func ExistUserInUserList(userId int) bool {
+	_, ok := onlineUserList[userId]
+	return ok
+}
+
 // 从在线好友列表中移除指定的用户
 func RemoveUserFromOnlineUserList(userId int) (bool, error) {
 	_, ok := onlineUserList[userId]
@@ -45,6 +51,10 @@ func RemoveUserFromOnlineUserList(userId int) (bool, error) {
 }
 
 // 从在线好用列表中获取指定的用户
-func GetUserFromOnlineUserList(userId int) (*model.User, error) {
-	return nil, nil
+func GetUserFromOnlineUserList(userId int) *model.User {
+	user, ok := onlineUserList[userId]
+	if ok {
+		return user
+	}
+	return nil
 }
