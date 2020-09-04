@@ -72,6 +72,9 @@ func (this *Processor) ServerProcessMess(mess *common.Message) (err error) {
 	case common.PersonalSmsMesType:
 		up := &processes.SmsProcess{Conn: this.Conn}
 		return up.SendPersonalSmsMessage(mess)
+	case common.FileUploadMesType:
+		up := &processes.FileProcess{}
+		return up.UploadBigFile(mess)
 	default:
 		fmt.Println("message: ", mess)
 		return errors.New("未知的消息类型：" + mess.Type)

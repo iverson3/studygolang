@@ -11,6 +11,7 @@ const (
 	NotifyUserStatusMesType = "NotifyUserStatusMes"
 	GroupSmsMesType         = "GroupSmsMes"
 	PersonalSmsMesType      = "PersonalSmsMes"
+	FileUploadMesType       = "FileUploadMes"
 )
 
 const (
@@ -71,6 +72,14 @@ type PersonalSmsMes struct {
 	To model.User `json:"to"`
 	Content string `json:"content"`
 	SendTime string `json:"send_time"`
+}
+
+// 文件上传消息
+type FileUploadMes struct {
+	FileName string `json:"file_name"`
+	Data []byte `json:"data"`
+	Len int `json:"len"`
+	UploadStatus string `json:"upload_status"`
 }
 
 // 获取在线用户列表结果消息

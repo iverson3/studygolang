@@ -12,7 +12,7 @@ import (
 type Transfer struct {
 	Conn net.Conn
 	// 数据传输时的缓冲空间
-	Buf [8096]byte
+	Buf [100*1024*1024]byte
 }
 
 // 从连接中读取客户端发送过来的数据

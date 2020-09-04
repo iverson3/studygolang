@@ -17,14 +17,17 @@ func ShowMenu() {
 	fmt.Println("\t\t 1.显示在线用户列表")
 	fmt.Println("\t\t 2.群发消息")
 	fmt.Println("\t\t 3.个人私聊")
-	fmt.Println("\t\t 4.信息列表")
-	fmt.Println("\t\t 5.退出登录")
-	fmt.Println("\t\t 6.退出系统")
+
+	fmt.Println("\t\t 4.文件上传")
+	fmt.Println("\t\t 5.信息列表")
+	fmt.Println("\t\t 6.退出登录")
+
+	fmt.Println("\t\t 7.退出系统")
 
 	smsProcess := &SmsProcess{}
 	var key int
 	for {
-		fmt.Println("\t\t 请选择 (1-6)：")
+		fmt.Println("\t\t 请选择 (1-7)：")
 		// 需要处理用户输入字符串的情况
 		_, _ = fmt.Scanf("%d\n", &key)
 		switch key {
@@ -63,11 +66,27 @@ func ShowMenu() {
 				fmt.Println("私发消息失败；error: ", err.Error())
 			}
 		case 4:
-			fmt.Println("4")
+			var path string
+			fmt.Print("请输入文件路径:")
+			_, _ = fmt.Scanf("%s\n", &path)
+
+			info, err := os.Stat(path)
+			if err == nil || os.IsExist(err) {
+				if info.IsDir() {
+					fmt.Println("不是文件 是目录")
+				} else {
+					fp := FileProcess{}
+					err = fp.UploadBigFile(path)
+				}
+			} else {
+				fmt.Println("文件不存在")
+			}
 		case 5:
 			fmt.Println("5")
 		case 6:
 			fmt.Println("6")
+		case 7:
+			fmt.Println("7")
 			os.Exit(0)
 		default:
 			println("输入有误，请重新输入")
