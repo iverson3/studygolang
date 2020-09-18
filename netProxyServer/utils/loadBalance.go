@@ -100,7 +100,7 @@ func checkServers(servers HttpServers, failMax int, recoverMax int, failFactor f
 			// 打印所有服务器的状态信息
 			for _, s := range servers {
 				// 计数器机制的打印信息
-				fmt.Printf("server %s: %s (%d) \n", s.Host, s.Status, s.FailCount)
+				//fmt.Printf("server %s: %s (%d) \n", s.Host, s.Status, s.FailCount)
 
 				// 降权机制的打印信息
 				fmt.Printf("server %s: %d - %d \n", s.Host, s.Weight, s.FailWeight)
