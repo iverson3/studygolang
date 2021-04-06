@@ -16,6 +16,7 @@ func main() {
 	}
 	defer conn.Close()
 
+
 	//_, err = conn.Do("hset", "user01", "name", "tomtom")
 	//if err != nil {
 	//	fmt.Println("hset failed! error: ", err)
