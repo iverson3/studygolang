@@ -1,10 +1,50 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"runtime"
+	"studygolang/slice/trap"
+)
 
 // slice切片
 
 func main() {
+	data := make([][]int, 0)
+
+	// 如果是服务器，因为需要常驻内存持续提供服务，所以要特别注意内存泄露或无法回收
+	for i := 0; i < 100; i++{
+		originData := trap.FetchData(128 * 1024)
+		res        := trap.DealData(originData)
+		//res      := trap.DealData2(originData)
+
+		data = append(data, res)
+	}
+
+	//size := unsafe.Sizeof(data)
+	//size, err := trap.GetRealSizeOf(data)
+	//if err != nil {
+	//	fmt.Println("get size failed")
+	//} else {
+	//	fmt.Println("data mem size: ", size)
+	//}
+
+	//var x int
+	//size := unsafe.Sizeof(x)
+	//fmt.Println(size)
+
+	runtime.GC()
+
+	fmt.Printf("%v\n", data)
+
+	size, _ := trap.GetRealSizeOf(data)
+	fmt.Println("data mem size: ", size)
+
+	trap.PrintMem()
+
+	return
+
+
+
 
 	arr := []int{1, 2, 3, 4, 5}
 
