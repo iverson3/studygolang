@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 // Go 程序会在 2 个地方为变量分配内存，一个是全局的堆(heap)空间用来动态分配内存，另一个是每个 goroutine 的栈(stack)空间
 // Go 语言实现垃圾回收(Garbage Collector)机制，因此呢，Go 语言的内存管理是自动的，通常开发者并不需要关心内存分配在栈上，还是堆上。
 // 但是从性能的角度出发，在栈上分配内存和在堆上分配内存，性能差异是非常大的。
@@ -22,8 +20,8 @@ import "fmt"
 // 在 C 语言中，可以使用 malloc 和 free 手动在堆上分配和回收内存。Go 语言中，堆内存是通过垃圾回收机制自动管理的，无需开发者指定。
 //那么，Go 编译器怎么知道某个变量需要分配在栈上，还是堆上呢？编译器决定内存分配位置的方式，就称之为逃逸分析(escape analysis)。逃逸分析由编译器完成，作用于编译阶段。
 
-// 指针逃逸
-// interface{}动态类型逃逸
+// 返回局部变量的指针导致的逃逸
+// interface{}动态类型导致的逃逸
 // 栈空间不足导致的逃逸
 // 因闭包而产生的逃逸
 
@@ -37,7 +35,8 @@ func main() {
 	//t2()
 	//t3()
 	//t4()
-	t5()
+	//t5()
+	t6()
 }
 
 // 指针逃逸
@@ -113,27 +112,46 @@ func t3() {
 
 // slice在append时元素个数超过其cap，重新分配内存 存放新的底层数组
 // 结论：好像并不会发生逃逸
-func t5()  {
-	ss := make([]int, 2, 2)
-	ss[0] = 1
-	ss[1] = 2
-	//fmt.Println(cap(ss))   // cap is 2
-	ss = appendEleToSlice(ss)
-	fmt.Println(ss[3])
+//func t5()  {
+//	ss := make([]int, 2, 2)
+//	ss[0] = 1
+//	ss[1] = 2
+//	//fmt.Println(cap(ss))   // cap is 2
+//	ss = appendEleToSlice(ss)
+//	fmt.Println(ss[3])
+//
+//	//changeSliceValue(ss)
+//	//fmt.Println(ss[0])
+//}
+//func appendEleToSlice(s []int) []int {
+//	//fmt.Println(cap(s))  // cap is 2
+//	s = append(s, 3)
+//	s = append(s, 4)
+//	//fmt.Println(cap(s))  // cap is 4
+//	return s
+//}
 
-	//changeSliceValue(ss)
-	//fmt.Println(ss[0])
-}
-func appendEleToSlice(s []int) []int {
-	//fmt.Println(cap(s))  // cap is 2
-	s = append(s, 3)
-	s = append(s, 4)
-	//fmt.Println(cap(s))  // cap is 4
-	return s
-}
 //func changeSliceValue(s []int) {
 //	// 有了这行代码，之后对slice的修改就无法影响到函数外的原slice变量了
 //	// 因为append使slice的元素个数超过了当前的cap，所以会重新分配内存 用来存放新的更大的底层数组，并且s变量会指向新的底层数组，而函数外的ss还是指向原来的底层数组
 //	s = append(s, 3)
 //	s[0] = 100
 //}
+
+
+// 结论： 调用函数的时候，传递变量的指针作为参数，并不会导致该变量发生逃逸 (除非该变量本身因为其他原因已经发生了逃逸)
+type Person struct {
+	name string
+	age int
+}
+func t6() {
+	n := Person{name: "stefan", age: 12}
+	callFunc(&n)
+
+	n.name = "another name"
+	//fmt.Println(n.age)
+}
+func callFunc(n *Person) {
+	n.name = "changed name"
+	n.age = 22
+}
