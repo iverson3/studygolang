@@ -15,6 +15,10 @@ var bufPool = sync.Pool{
 	},
 }
 
+type Person struct {
+	Age int
+}
+
 func main() {
 	go func() {
 		// 为了进行性能分析，我们还额外创建了一个监听 6060端口的 goroutine，用于使用 pprof 进行分析
@@ -33,6 +37,22 @@ func main() {
 		bufPool.Put(b)
 	})
 	_ = http.ListenAndServe(":8080", nil)
+	
+	
+	
+	m := make([]Person, 100)
+
+	// 省略初始化，假设slice里的Person都有数据
+
+	for k, v := range m {
+		v.Age = 111
+		fmt.Println(k, v)
+	}
+
+	for k, _ := range m {
+		m[k].Age = 111
+		fmt.Println(k, m[k])
+	}
 }
 
 //func newBuf() []byte {

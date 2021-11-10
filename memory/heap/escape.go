@@ -24,6 +24,9 @@ package main
 // interface{}动态类型导致的逃逸
 // 栈空间不足导致的逃逸
 // 因闭包而产生的逃逸
+// 发送指针或带有指针的值到channel中
+// 在slice上存储指针或带有指针的值
+// 在interface类型上调用方法
 
 type Demo struct {
 	name string
