@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
+	"runtime"
+	"runtime/trace"
 	"sync"
 	"time"
 )
@@ -14,9 +17,46 @@ import (
 // 比如切片为：[23,32,43,76,98,54,67,32,28,61,39,.....,941,58]，查找的目标值是345，如果切片中存在目标值则输出"Found it"并且立即取消仍在执行查找任务的goroutine。
 // 如果超时了则输出"Timeout，not found"，同时立即取消仍在执行查找任务的goroutine；如果查找一遍没找到目标值，则输出"Work done，but not found"并立即停止所有查找任务的goroutine。
 
+//var file = flag.String("cpuprofile", "", "write cpu profile to file")
+
+type Person struct {
+	A int
+}
+
 func main() {
-	maxNumber := 10000
-	searchNumber := 5555
+	//flag.Parse()
+	//if *file != "" {
+	//	f, err := os.Create(*file)
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	pprof.StartCPUProfile(f)
+	//	defer pprof.StopCPUProfile()
+	//}
+
+
+	b := 1
+	//cc := make(chan struct{}, 1)
+	for  {
+		go func() {
+			//cc <- struct{}{}
+			fmt.Println("before: ", b)
+			//b <<= 1
+			fmt.Println(b)
+			//<-cc
+		}()
+		runtime.Gosched()
+	}
+
+	return
+
+	f, _ := os.Create("trace.out")
+	trace.Start(f)
+	defer trace.Stop()
+
+
+	maxNumber := 100000
+	searchNumber := 55555
 	s := generateData(maxNumber, searchNumber)
 	//fmt.Printf("%v\n", s)
 
@@ -30,7 +70,7 @@ func search(s []int, targetNumber int) {
 	dataCh := make(chan int, len(s)/10)
 	closeCh := make(chan struct{})
 	resCh := make(chan struct{}, 1)
-	workerNum := 6
+	workerNum := 1
 	isTimeout := false
 
 	wg.Add(workerNum)

@@ -1,0 +1,39 @@
+# github.com/coreos/go-semver v0.3.0
+## explicit
+# github.com/coreos/go-systemd/v22 v22.3.2
+## explicit; go 1.12
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
+# github.com/golang/protobuf v1.5.2
+## explicit; go 1.9
+# github.com/pdfcpu/pdfcpu v0.3.13
+## explicit; go 1.17
+# github.com/unidoc/unipdf/v3 v3.33.0
+## explicit; go 1.14
+github.com/unidoc/unipdf/v3/common
+github.com/unidoc/unipdf/v3/common/license
+github.com/unidoc/unipdf/v3/internal/license
+# go.etcd.io/etcd/api/v3 v3.5.1
+## explicit; go 1.16
+# go.etcd.io/etcd/client/pkg/v3 v3.5.1
+## explicit; go 1.16
+# go.etcd.io/etcd/client/v3 v3.5.1
+## explicit; go 1.16
+# go.uber.org/atomic v1.7.0
+## explicit; go 1.13
+# go.uber.org/multierr v1.6.0
+## explicit; go 1.12
+# go.uber.org/zap v1.17.0
+## explicit; go 1.13
+# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+## explicit; go 1.11
+# golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+## explicit; go 1.17
+# golang.org/x/text v0.3.6
+## explicit; go 1.11
+# google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
+## explicit; go 1.11
+# google.golang.org/grpc v1.38.0
+## explicit; go 1.11
+# google.golang.org/protobuf v1.26.0
+## explicit; go 1.9
