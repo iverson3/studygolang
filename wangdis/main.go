@@ -1,11 +1,12 @@
 package main
 
 import (
-	"studygolang/wangdis/handler"
+	"studygolang/wangdis/redis/server"
+	"studygolang/wangdis/tcp"
 )
 
 func main() {
-	handler.ListenAndServe(":8000")
+	tcp.ListenAndServe(&tcp.Config{Address: ":9000"}, server.MakeHandler())
 }
 
 

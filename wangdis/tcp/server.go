@@ -1,27 +1,23 @@
-package handler
+package tcp
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"studygolang/wangdis/interface/tcp"
 	"studygolang/wangdis/lib/sync/atomic"
-	"studygolang/wangdis/tcp"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type Config struct {
-	Address string
-}
-
-type Handler interface {
-	Handle(ctx context.Context, conn net.Conn)
-	Close() error
+	Address string           `yaml:"address"`
+	MaxConnect uint32        `yaml:"max-connect"`
+	Timeout    time.Duration `yaml:"timeout"`
 }
 
 func ListenAndServe(conf *Config, handler tcp.Handler) {
@@ -83,37 +79,8 @@ func ListenAndServe(conf *Config, handler tcp.Handler) {
 				waitDone.Done()
 			}()
 			waitDone.Add(1)
-			Handle(ctx, conn)
+			handler.Handle(ctx, conn)
 		}()
 	}
 }
 
-func Handle(ctx context.Context, conn net.Conn) {
-	reader := bufio.NewReader(conn)
-	for {
-		msg, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				log.Println("connection close")
-			} else {
-				log.Printf("read from client failed, error: %v", err)
-			}
-			return
-		}
-		log.Printf("got msg from client: %s", msg)
-
-		resp := []byte(fmt.Sprintf("msg from server: %s", msg))
-		n, err := conn.Write(resp)
-		if err != nil {
-			if err == io.EOF {
-				log.Println("write failed, error: connection close")
-			} else {
-				log.Println(err)
-			}
-			return
-		}
-		if n != len(resp) {
-			log.Println("write failed, error: write len is wrong")
-		}
-	}
-}

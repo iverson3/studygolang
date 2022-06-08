@@ -1,17 +1,17 @@
 package db
 
-type DB struct {
+import (
+	"studygolang/wangdis/interface/redis"
+	"studygolang/wangdis/redis/protocol"
+)
+
+type TestDB struct {
 
 }
 
-type BbResult struct {
-	data string
+func (db *TestDB) Exec(c redis.Connection, args [][]byte) redis.Reply {
+	return &protocol.StatusReply{Status: "OK"}
 }
+func (db *TestDB) Close() {
 
-func (db DB) Exec(args [][]byte) *BbResult {
-	return &BbResult{data: "db exec result"}
-}
-
-func (r BbResult) ToBytes() []byte {
-	return []byte(r.data)
 }
