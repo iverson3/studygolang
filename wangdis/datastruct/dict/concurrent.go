@@ -7,13 +7,13 @@ import (
 )
 
 type ConcurrentDict struct {
-	table []*shard
-	count int32     // key的总数
-	shardCount int  // shard的数量
+	table      []*shard
+	count      int32 // key的总数
+	shardCount int   // shard的数量
 }
 
 type shard struct {
-	m map[string]interface{}
+	m  map[string]interface{}
 	mu sync.RWMutex
 }
 
@@ -212,7 +212,7 @@ func (dict *ConcurrentDict) ForEach(consumer Consumer) {
 		shard.mu.RLock()
 		func() {
 			defer shard.mu.RUnlock()
-			for key, val:= range shard.m {
+			for key, val := range shard.m {
 				continues := consumer(key, val)
 				if !continues {
 					return
@@ -249,4 +249,12 @@ func (s *shard) RandomKey() string {
 		return key
 	}
 	return ""
+}
+
+func (dict *ConcurrentDict) RandomKeys(limit int) []string {
+	return nil
+}
+
+func (dict *ConcurrentDict) RandomDistinctKeys(limit int) []string {
+	return nil
 }
