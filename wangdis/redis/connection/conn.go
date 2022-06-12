@@ -17,10 +17,13 @@ type Connection struct {
 
 	// 当服务发送响应数据的时候加锁
 	mu sync.Mutex
+
+	// selected db
+	selectedDB int
 }
 
 func NewConn(conn net.Conn) *Connection {
-	return &Connection {
+	return &Connection{
 		conn: conn,
 	}
 }
@@ -45,9 +48,18 @@ func (c *Connection) Write(b []byte) error {
 	return err
 }
 
+// GetDBIndex returns selected db
+func (c *Connection) GetDBIndex() int {
+	return c.selectedDB
+}
+
+// SelectDB selects a database
+func (c *Connection) SelectDB(dbNum int) {
+	c.selectedDB = dbNum
+}
+
 func (c *Connection) Close() error {
 	c.waitingReply.WaitWithTimeout(10 * time.Second)
 	_ = c.conn.Close()
 	return nil
 }
-

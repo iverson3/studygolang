@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 	"strings"
-	"studygolang/wangdis/db"
+	database2 "studygolang/wangdis/database"
 	"studygolang/wangdis/interface/database"
 	"studygolang/wangdis/lib/sync/atomic"
 	"studygolang/wangdis/redis/connection"
@@ -33,7 +33,7 @@ type Handler struct {
 
 func MakeHandler() *Handler {
 	return &Handler{
-		db: &db.TestDB{},
+		db: database2.NewStandaloneServer(),
 	}
 }
 
