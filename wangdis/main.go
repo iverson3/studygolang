@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 	"sort"
 	"strconv"
+	"strings"
 	"studygolang/wangdis/redis/server"
 	"studygolang/wangdis/tcp"
 	"syscall"
@@ -104,9 +106,25 @@ func nextMaxNum2(num int64) int64 {
 	return res
 }
 
+func replaceUrl(url string, target string) string {
+	pattern := `^(http|https)://([^/]+)/.*\.(jpeg|jpg|png)$`
+
+	var reg = regexp.MustCompile(pattern)
+	submatch := reg.FindStringSubmatch(url)
+	fmt.Println(submatch)
+	replace := strings.Replace(url, submatch[2], target, 1)
+	return replace
+}
 
 func main() {
-	// 1234
+
+	url := "https://www.baidu.com/aaa/bbb/index.jpeg"
+
+	s := replaceUrl(url, "www.google.com")
+	fmt.Println(s)
+
+
+	return
 	// 1433          pass
 	// 661543647     pass
 	// 6615437765    pass
@@ -174,6 +192,8 @@ func main() {
 	fmt.Println(shardCount, capacity)
 
 	return
+
+
 	tcp.ListenAndServe(&tcp.Config{Address: ":9000"}, server.MakeHandler())
 }
 
