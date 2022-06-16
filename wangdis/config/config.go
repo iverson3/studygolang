@@ -17,3 +17,12 @@ type ServerProperties struct {
 
 // Properties holds global config properties
 var Properties *ServerProperties
+
+func init() {
+	// default config
+	Properties = &ServerProperties{
+		Bind:       "127.0.0.1",
+		Port:       6379,
+		AppendOnly: false,
+	}
+}

@@ -121,7 +121,7 @@ func (db *DB) RWUnLocks(writeKeys []string, readKeys []string) {
 
 // 数据访问
 
-func (db *DB) PutEntity(key string, entity database.DataEntity) int {
+func (db *DB) PutEntity(key string, entity *database.DataEntity) int {
 	db.stopWorld.Wait()
 	return db.data.Put(key, entity)
 }
