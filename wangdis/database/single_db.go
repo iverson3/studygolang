@@ -33,6 +33,7 @@ type DB struct {
 	locker *lock.Locks
 	// stop all data access for execFlushDB
 	stopWorld sync.WaitGroup
+	addAof    func(CmdLine)
 }
 
 // ExecFunc is interface for command executor
@@ -56,8 +57,19 @@ func makeDB() *DB {
 		ttlMap:     dict.MakeConcurrent(ttlDictSize),
 		versionMap: dict.MakeConcurrent(dataDictSize),
 		locker:     lock.Make(lockerSize),
+		addAof:     func(line CmdLine) {},
 	}
 	return db
+}
+
+func makeBasicDB() *DB {
+	return &DB{
+		data:       dict.MakeSimple(),
+		ttlMap:     dict.MakeSimple(),
+		versionMap: dict.MakeSimple(),
+		locker:     lock.Make(1),
+		addAof:     func(line CmdLine) {},
+	}
 }
 
 func (db *DB) Exec(c redis.Connection, cmdLine [][]byte) redis.Reply {
