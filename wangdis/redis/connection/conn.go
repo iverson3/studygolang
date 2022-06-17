@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"bytes"
 	"net"
 	"studygolang/wangdis/lib/sync/wait"
 	"sync"
@@ -62,4 +63,27 @@ func (c *Connection) Close() error {
 	c.waitingReply.WaitWithTimeout(10 * time.Second)
 	_ = c.conn.Close()
 	return nil
+}
+
+
+// FakeConn implements redis.Connection for test
+type FakeConn struct {
+	Connection
+	buf bytes.Buffer
+}
+
+// Write writes data to buffer
+func (c *FakeConn) Write(b []byte) error {
+	c.buf.Write(b)
+	return nil
+}
+
+// Clean resets the buffer
+func (c *FakeConn) Clean() {
+	c.buf.Reset()
+}
+
+// Bytes returns written data
+func (c *FakeConn) Bytes() []byte {
+	return c.buf.Bytes()
 }
