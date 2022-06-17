@@ -53,12 +53,12 @@ func execLIndex(db *DB, args [][]byte) redis.Reply {
 	}
 
 	size := list.Len()
-	if index < -1 * size {
+	if index < -1*size {
 		return &protocol.NullBulkReply{}
 	} else if index < 0 {
 		index = size + index
 	} else if index >= size {
-		return  &protocol.NullBulkReply{}
+		return &protocol.NullBulkReply{}
 	}
 
 	val, _ := list.Get(index).([]byte)
@@ -99,7 +99,7 @@ func execLPop(db *DB, args [][]byte) redis.Reply {
 	}
 	val, _ := valInter.([]byte)
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("lpop", args...))
 	return protocol.MakeBulkReply(val)
 }
 
@@ -140,7 +140,7 @@ func execLPush(db *DB, args [][]byte) redis.Reply {
 		list.Insert(0, val)
 	}
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("lpush", args...))
 	return protocol.MakeIntReply(int64(list.Len()))
 }
 
@@ -172,7 +172,7 @@ func execLPushX(db *DB, args [][]byte) redis.Reply {
 		list.Insert(0, val)
 	}
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("lpushx", args...))
 	return protocol.MakeIntReply(int64(list.Len()))
 }
 
@@ -204,7 +204,7 @@ func execLRange(db *DB, args [][]byte) redis.Reply {
 		return &protocol.EmptyMultiBulkReply{}
 	}
 
-	if start < -1 * size {
+	if start < -1*size {
 		start = 0
 	} else if start < 0 {
 		start = size + start
@@ -212,7 +212,7 @@ func execLRange(db *DB, args [][]byte) redis.Reply {
 		return &protocol.EmptyMultiBulkReply{}
 	}
 
-	if stop < -1 * size {
+	if stop < -1*size {
 		stop = 0
 	} else if stop < 0 {
 		stop = size + stop + 1
@@ -268,7 +268,7 @@ func execLRem(db *DB, args [][]byte) redis.Reply {
 	}
 
 	if removed > 0 {
-		// todo: addAof
+		db.addAof(utils.ToCmdLine3("lrem", args...))
 	}
 	return protocol.MakeIntReply(int64(removed))
 }
@@ -293,7 +293,7 @@ func execLSet(db *DB, args [][]byte) redis.Reply {
 	}
 
 	size := list.Len()
-	if index < -1 * size {
+	if index < -1*size {
 		return protocol.MakeErrReply("ERR index out of range")
 	} else if index < 0 {
 		index = size + index
@@ -302,7 +302,7 @@ func execLSet(db *DB, args [][]byte) redis.Reply {
 	}
 
 	list.Set(index, value)
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("lset", args...))
 	return &protocol.OkReply{}
 }
 
@@ -324,7 +324,7 @@ func undoLSet(db *DB, args [][]byte) []CmdLine {
 	}
 
 	size := list.Len()
-	if index < -1 * size {
+	if index < -1*size {
 		return nil
 	} else if index < 0 {
 		index = size + index
@@ -360,7 +360,7 @@ func execRPop(db *DB, args [][]byte) redis.Reply {
 	if list.Len() == 0 {
 		db.Remove(key)
 	}
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("rpop", args...))
 	return protocol.MakeBulkReply(val)
 }
 
@@ -421,7 +421,7 @@ func execRPopLPush(db *DB, args [][]byte) redis.Reply {
 		db.Remove(sourceKey)
 	}
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("rpoplpush", args...))
 	return protocol.MakeBulkReply(val)
 }
 
@@ -437,7 +437,7 @@ func undoRPopLPush(db *DB, args [][]byte) []CmdLine {
 	}
 
 	val, _ := list.Get(list.Len() - 1).([]byte)
-	return []CmdLine {
+	return []CmdLine{
 		{
 			rPushCmd,
 			args[0],
@@ -464,7 +464,7 @@ func execRPush(db *DB, args [][]byte) redis.Reply {
 		list.Add(val)
 	}
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("rpush", args...))
 	return protocol.MakeIntReply(int64(list.Len()))
 }
 
@@ -483,7 +483,7 @@ func undoRPush(db *DB, args [][]byte) []CmdLine {
 // 只有当链表存在的时候，才往链表尾部插入多个元素
 func execRPushX(db *DB, args [][]byte) redis.Reply {
 	if len(args) < 2 {
-		return  protocol.MakeErrReply("ERR wrong number of arguments for 'rpush' command")
+		return protocol.MakeErrReply("ERR wrong number of arguments for 'rpush' command")
 	}
 	key := string(args[0])
 	values := args[1:]
@@ -500,7 +500,7 @@ func execRPushX(db *DB, args [][]byte) redis.Reply {
 		list.Add(val)
 	}
 
-	// todo: addAof
+	db.addAof(utils.ToCmdLine3("rpushx", args...))
 	return protocol.MakeIntReply(int64(list.Len()))
 }
 
