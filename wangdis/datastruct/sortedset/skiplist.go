@@ -3,35 +3,35 @@ package sortedset
 import "math/rand"
 
 const (
-	maxLevel = 16   // 允许的最大层数
+	maxLevel = 16 // 允许的最大层数
 )
 
 type Element struct {
 	Member string  // key
-	Score float64  // 排序的分值
+	Score  float64 // 排序的分值
 }
 
 type Level struct {
 	forward *node // 指向后一个节点
-	span int64    // 从当前层找到下一个节点时，跳过的节点数
+	span    int64 // 从当前层找到下一个节点时，跳过的节点数
 }
 
 type node struct {
 	Element
-	backward *node   // 指向前一个节点
-	level []*Level   // level[0]是最下面的一层
+	backward *node    // 指向前一个节点
+	level    []*Level // level[0]是最下面的一层
 }
 
 type skiplist struct {
 	header *node
-	tail *node
-	length int64  // 节点数量
-	level int16   // 层数最高的那个节点的层数
+	tail   *node
+	length int64 // 节点数量
+	level  int16 // 层数最高的那个节点的层数
 }
 
 func makeNode(level int16, score float64, member string) *node {
 	n := &node{
-		Element:  Element{
+		Element: Element{
 			Member: member,
 			Score:  score,
 		},
@@ -68,9 +68,11 @@ func (skip *skiplist) insert(member string, score float64) *node {
 		panic("skiplist is nil")
 	}
 
-	// 存放所有需要在插入节点后更新的节点
+	// 寻找新节点的先驱节点，它们的 forward 将指向新节点
+	// 存放每一层需要在插入节点后更新的节点(先驱节点)
 	update := make([]*node, maxLevel)
 	// 计算存储需要修改调整的跳过节点数 (还不太清楚)
+	// 保存各层先驱节点的排名，用于计算span
 	rank := make([]int64, maxLevel)
 
 	// 找到新节点插入的位置 (遍历结束之后 node即是新节点插入位置的前一个节点)
@@ -147,7 +149,7 @@ func (skip *skiplist) removeNode(node *node, update []*node) {
 	}
 
 	// 更新skiplist的最高层数level
-	for skip.level > 1 && skip.header.level[skip.level - 1].forward == nil {
+	for skip.level > 1 && skip.header.level[skip.level-1].forward == nil {
 		skip.level--
 	}
 	node = nil
@@ -198,7 +200,7 @@ func (skip *skiplist) getByRank(rank int64) *node {
 	var span int64
 	node := skip.header
 	for i := skip.level - 1; i >= 0; i-- {
-		for node.level[i].forward != nil && (span + node.level[i].span) <= rank {
+		for node.level[i].forward != nil && (span+node.level[i].span) <= rank {
 			span += node.level[i].span
 			node = node.level[i].forward
 		}
@@ -213,29 +215,3 @@ func (skip *skiplist) getByRank(rank int64) *node {
 func (skiplist *skiplist) hasInRange() {
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
