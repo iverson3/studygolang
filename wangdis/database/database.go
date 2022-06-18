@@ -129,9 +129,9 @@ func execSelect(mdb *MultiDB, c redis.Connection, args [][]byte) redis.Reply {
 	}
 	c.SelectDB(index)
 
-	if mdb.aofHandler != nil {
-		mdb.aofHandler.AddAof(index, utils.ToCmdLine("SELECT", strconv.Itoa(index)))
-	}
+	//if mdb.aofHandler != nil {
+	//	mdb.aofHandler.AddAof(index, utils.ToCmdLine("SELECT", strconv.Itoa(index)))
+	//}
 	return protocol.MakeOkReply()
 }
 
@@ -210,6 +210,9 @@ func BGRewriteAOF(db *MultiDB, args [][]byte) redis.Reply {
 
 // RewriteAOF 同步的执行aof重写
 func RewriteAOF(db *MultiDB, args [][]byte) redis.Reply {
+	if db.aofHandler == nil {
+		return protocol.MakeErrReply("aof is not enabled")
+	}
 	err := db.aofHandler.Rewrite()
 	if err != nil {
 		return protocol.MakeErrReply(err.Error())

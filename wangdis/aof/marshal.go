@@ -44,7 +44,7 @@ var rPushAllCmd = []byte("RPUSH")
 func listToCmd(key string, list *List.LinkedList) *protocol.MultiBulkReply {
 	args := make([][]byte, list.Len()+2)
 	args[0] = rPushAllCmd
-	args[0] = []byte(key)
+	args[1] = []byte(key)
 	list.ForEach(func(i int, val interface{}) bool {
 		bytes, _ := val.([]byte)
 		args[i+2] = bytes
