@@ -21,8 +21,9 @@ var Properties *ServerProperties
 func init() {
 	// default config
 	Properties = &ServerProperties{
-		Bind:       "127.0.0.1",
-		Port:       6379,
-		AppendOnly: false,
+		Bind:           "127.0.0.1",
+		Port:           6379,
+		AppendOnly:     true,
+		AppendFilename: "aof.txt",
 	}
 }
