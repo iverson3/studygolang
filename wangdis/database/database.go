@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"studygolang/wangdis/aof"
 	"studygolang/wangdis/config"
@@ -84,8 +85,12 @@ func (mdb *MultiDB) Exec(c redis.Connection, cmdLine [][]byte) (result redis.Rep
 		return BGRewriteAOF(mdb, cmdLine[1:])
 	} else if cmdName == "rewriteaof" {
 		return RewriteAOF(mdb, cmdLine[1:])
+	} else if cmdName == "flushdb" {
+		return mdb.flushDB(c)
 	} else if cmdName == "flushall" {
 		return mdb.flushAll()
+	} else if cmdName == "select" {
+		return execSelect(mdb, c, cmdLine)
 	}
 
 	// todo: support multi database transaction
@@ -110,6 +115,45 @@ func (mdb *MultiDB) Close() {
 	}
 }
 
+// 根据客户端的命令设置当前数据库为对应的编号
+func execSelect(mdb *MultiDB, c redis.Connection, args [][]byte) redis.Reply {
+	if len(args) != 2 {
+		return protocol.MakeArgNumErrReply("select")
+	}
+	index, err := strconv.Atoi(string(args[1]))
+	if err != nil {
+		return protocol.MakeErrReply("ERR DB index is invalid")
+	}
+	if index >= len(mdb.dbSet) || index < 0 {
+		return protocol.MakeErrReply("ERR DB index is out of range")
+	}
+	c.SelectDB(index)
+
+	if mdb.aofHandler != nil {
+		mdb.aofHandler.AddAof(index, utils.ToCmdLine("SELECT", strconv.Itoa(index)))
+	}
+	return protocol.MakeOkReply()
+}
+
+// 选择指定编号的数据库
+func (mdb *MultiDB) selectDB(dbIndex int) *DB {
+	if dbIndex >= len(mdb.dbSet) {
+		panic("ERR DB index is out of range")
+	}
+	return mdb.dbSet[dbIndex]
+}
+
+// 清空当前数据库
+func (mdb *MultiDB) flushDB(c redis.Connection) redis.Reply {
+	mdb.dbSet[c.GetDBIndex()].Flush()
+
+	if mdb.aofHandler != nil {
+		mdb.aofHandler.AddAof(c.GetDBIndex(), utils.ToCmdLine("FlushDB", strconv.Itoa(c.GetDBIndex())))
+	}
+	return &protocol.OkReply{}
+}
+
+// 清空所有数据库
 func (mdb *MultiDB) flushAll() redis.Reply {
 	for _, db := range mdb.dbSet {
 		db.Flush()
@@ -137,8 +181,7 @@ func (mdb *MultiDB) GetUndoLogs(dbIndex int, cmdLine [][]byte) []database.CmdLin
 }
 
 func (mdb *MultiDB) ForEach(dbIndex int, cb func(key string, data *database.DataEntity, expiration *time.Time) bool) {
-	//TODO implement me
-	panic("implement me")
+	mdb.dbSet[dbIndex].ForEach(cb)
 }
 
 func (mdb *MultiDB) RWLocks(dbIndex int, writeKeys []string, readKeys []string) {
@@ -158,6 +201,9 @@ func (mdb *MultiDB) GetDBSize(dbIndex int) (int, int) {
 
 // BGRewriteAOF 在后台异步的执行aof重写
 func BGRewriteAOF(db *MultiDB, args [][]byte) redis.Reply {
+	if db.aofHandler == nil {
+		return protocol.MakeErrReply("aof is not enabled")
+	}
 	go db.aofHandler.Rewrite()
 	return protocol.MakeStatusReply("Background append only file rewriting started")
 }
