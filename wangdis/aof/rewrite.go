@@ -73,7 +73,7 @@ func (handler *Handler) StartRewrite() (*RewriteCtx, error) {
 	}, nil
 }
 
-// DoRewrite aof重写期间是允许aof任务正常执行的
+// DoRewrite aof重写期间是允许aof任务正常执行的 (在不阻塞在线服务的同时进行其它操作是一项必需的能力，AOF重写的思路在解决这类问题时具有重要的参考价值)
 func (handler *Handler) DoRewrite(ctx *RewriteCtx) error {
 	tmpFile := ctx.tmpFile
 
@@ -169,14 +169,3 @@ func (handler *Handler) FinishRewrite(ctx *RewriteCtx) {
 		panic(err)
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
