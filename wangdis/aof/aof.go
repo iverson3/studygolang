@@ -26,16 +26,16 @@ type payload struct {
 }
 
 type Handler struct {
-	db database.EmbedDB
-	tmpDBMaker func() database.EmbedDB
-	aofChan chan *payload
-	aofFile *os.File
+	db          database.EmbedDB
+	tmpDBMaker  func() database.EmbedDB
+	aofChan     chan *payload
+	aofFile     *os.File
 	aofFilename string
 	// aof任务结束并准备关闭的时候，通过这个finishedChan给主协程发送结束的信号
 	aofFinished chan struct{}
 	// aof重写开始和结束的时候需要暂停aof
 	pausingAof sync.RWMutex
-	currentDB int
+	currentDB  int
 }
 
 func NewAOFHandler(db database.EmbedDB, tmpDBMaker func() database.EmbedDB) (*Handler, error) {
@@ -43,6 +43,7 @@ func NewAOFHandler(db database.EmbedDB, tmpDBMaker func() database.EmbedDB) (*Ha
 	handler.aofFilename = config.Properties.AppendFilename
 	handler.db = db
 	handler.tmpDBMaker = tmpDBMaker
+	// 使用aof文件恢复数据 (依次执行aof文件中所有的命令，将数据加载到内存中)
 	handler.LoadAof(0)
 	// 以Append的方式打开aof文件
 	aofFile, err := os.OpenFile(handler.aofFilename, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0600)
