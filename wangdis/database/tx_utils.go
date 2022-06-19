@@ -1,6 +1,9 @@
 package database
 
-import "studygolang/wangdis/lib/utils"
+import (
+	"studygolang/wangdis/aof"
+	"studygolang/wangdis/lib/utils"
+)
 
 func readFirstKey(args [][]byte) ([]string, []string) {
 	if args == nil || len(args) == 0 {
@@ -28,13 +31,13 @@ func rollbackFirstKey(db *DB, args [][]byte) []CmdLine {
 func rollbackGivenKeys(db *DB, keys ...string) []CmdLine {
 	var undoCmdLines [][][]byte
 	for _, key := range keys {
-		_, ok := db.GetEntity(key)
+		entity, ok := db.GetEntity(key)
 		if !ok {
 			undoCmdLines = append(undoCmdLines, utils.ToCmdLine("DEL", key))
 		} else {
 			undoCmdLines = append(undoCmdLines,
 				utils.ToCmdLine("DEL", key), // clean existed first
-				//aof.EntityToCmd(key, entity).Args,
+				aof.EntityToCmd(key, entity).Args,
 				//toTTLCmd(db, key).Args,
 			)
 		}
