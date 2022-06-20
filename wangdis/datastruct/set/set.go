@@ -98,10 +98,12 @@ func (set *Set) Diff(another *Set) *Set {
 	return result
 }
 
+// RandomMembers 随机的获取指定数量的元素
 func (set *Set) RandomMembers(limit int) []string {
 	return set.dict.RandomKeys(limit)
 }
 
+// RandomDistinctMembers 随机的获取指定数量且不重复的若干元素
 func (set *Set) RandomDistinctMembers(limit int) []string {
 	return set.dict.RandomDistinctKeys(limit)
 }
