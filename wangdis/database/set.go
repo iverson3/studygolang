@@ -223,6 +223,243 @@ func execSRandMember(db *DB, args [][]byte) redis.Reply {
 	return protocol.MakeMultiBulkReply(results)
 }
 
+// 求多个集合的交集
+func execSInter(db *DB, args [][]byte) redis.Reply {
+	keys := make([]string, 0, len(args))
+	for _, arg := range args {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for _, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			return &protocol.EmptyMultiBulkReply{}
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Intersect(set)
+			if result.Len() == 0 {
+				return &protocol.EmptyMultiBulkReply{}
+			}
+		}
+	}
+
+	arr := make([][]byte, 0, result.Len())
+	result.ForEach(func(member string) bool {
+		arr = append(arr, []byte(member))
+		return true
+	})
+
+	return protocol.MakeMultiBulkReply(arr)
+}
+
+// 求多个集合的交集，并将结果存到第一个key里面
+func execSInterStore(db *DB, args [][]byte) redis.Reply {
+	dest := string(args[0])
+	keys := make([]string, 0, len(args) - 1)
+	keyArgs := args[1:]
+	for _, arg := range keyArgs {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for _, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			db.Remove(dest)
+			return protocol.MakeIntReply(0)
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Intersect(set)
+			if result.Len() == 0 {
+				db.Remove(dest)
+				return protocol.MakeIntReply(0)
+			}
+		}
+	}
+
+	set := HashSet.Make(result.ToSlice()...)
+	db.PutEntity(dest, &database.DataEntity{Data: set})
+	db.addAof(utils.ToCmdLine3("sinterstore", args...))
+	return protocol.MakeIntReply(int64(set.Len()))
+}
+
+// 求多个集合的并集
+func execSUnion(db *DB, args [][]byte) redis.Reply {
+	keys := make([]string, 0, len(args))
+	for _, arg := range args {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for _, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			continue
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Union(set)
+		}
+	}
+
+	if result == nil {
+		return &protocol.EmptyMultiBulkReply{}
+	}
+
+	arr := make([][]byte, 0, result.Len())
+	result.ForEach(func(member string) bool {
+		arr = append(arr, []byte(member))
+		return true
+	})
+
+	return protocol.MakeMultiBulkReply(arr)
+}
+
+// 求多个集合的并集，并将结果存到第一个key里面
+func execSUnionStore(db *DB, args [][]byte) redis.Reply {
+	dest := string(args[0])
+	keys := make([]string, 0, len(args) - 1)
+	keyArgs := args[1:]
+	for _, arg := range keyArgs {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for _, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			continue
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Union(set)
+		}
+	}
+
+	db.Remove(dest)
+	if result == nil {
+		return &protocol.EmptyMultiBulkReply{}
+	}
+
+	set := HashSet.Make(result.ToSlice()...)
+	db.PutEntity(dest, &database.DataEntity{Data: set})
+
+	db.addAof(utils.ToCmdLine3("sunionstore", args...))
+	return protocol.MakeIntReply(int64(set.Len()))
+}
+
+// 求多个集合的差集
+func execSDiff(db *DB, args [][]byte) redis.Reply {
+	keys := make([]string, 0, len(args))
+	for _, arg := range args {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for i, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			if i == 0 {
+				return &protocol.EmptyMultiBulkReply{}
+			}
+			continue
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Diff(set)
+			if result.Len() == 0 {
+				return &protocol.EmptyMultiBulkReply{}
+			}
+		}
+	}
+
+	if result == nil {
+		return &protocol.EmptyMultiBulkReply{}
+	}
+
+	arr := make([][]byte, 0, result.Len())
+	result.ForEach(func(member string) bool {
+		arr = append(arr, []byte(member))
+		return true
+	})
+
+	return protocol.MakeMultiBulkReply(arr)
+}
+
+// 求多个集合的差集，并将结果存到第一个key里面
+func execSDiffStore(db *DB, args [][]byte) redis.Reply {
+	dest := string(args[0])
+	keys := make([]string, 0, len(args) - 1)
+	keyArgs := args[1:]
+	for _, arg := range keyArgs {
+		keys = append(keys, string(arg))
+	}
+
+	var result *HashSet.Set
+	for i, key := range keys {
+		set, errReply := db.getAsSet(key)
+		if errReply != nil {
+			return errReply
+		}
+		if set == nil {
+			if i == 0 {
+				db.Remove(dest)
+				return protocol.MakeIntReply(0)
+			}
+			continue
+		}
+
+		if result == nil {
+			result = HashSet.Make(set.ToSlice()...)
+		} else {
+			result = result.Diff(set)
+			if result.Len() == 0 {
+				db.Remove(dest)
+				return protocol.MakeIntReply(0)
+			}
+		}
+	}
+
+	if result == nil {
+		db.Remove(dest)
+		return &protocol.EmptyMultiBulkReply{}
+	}
+
+	set := HashSet.Make(result.ToSlice()...)
+	db.PutEntity(dest, &database.DataEntity{Data: set})
+
+	db.addAof(utils.ToCmdLine3("sdiffstore", args...))
+	return protocol.MakeIntReply(int64(set.Len()))
+}
+
 func init() {
 	RegisterCommand("SADD", execSAdd, writeFirstKey, undoSetChange, -3)
 	RegisterCommand("SIsMember", execSIsMember, readFirstKey, nil, 3)
@@ -231,6 +468,15 @@ func init() {
 	RegisterCommand("SCard", execSCard, readFirstKey, nil, 2)
 	RegisterCommand("SMembers", execSMembers, readFirstKey, nil, 2)
 	RegisterCommand("SRandMember", execSRandMember, readFirstKey, nil, -2)
+
+	RegisterCommand("SInter", execSInter, prepareSetCalculate, nil, -2)
+	RegisterCommand("SInterStore", execSInterStore, prepareSetCalculateStore, rollbackFirstKey, -3)
+
+	RegisterCommand("SUnion", execSUnion, prepareSetCalculate, nil, -2)
+	RegisterCommand("SUnionStore", execSUnionStore, prepareSetCalculateStore, rollbackFirstKey, -3)
+
+	RegisterCommand("SDiff", execSDiff, prepareSetCalculate, nil, -2)
+	RegisterCommand("SDiffStore", execSDiffStore, prepareSetCalculateStore, rollbackFirstKey, -3)
 }
 
 

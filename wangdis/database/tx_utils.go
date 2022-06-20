@@ -78,3 +78,21 @@ func undoSetChange(db *DB, args [][]byte) []CmdLine {
 	}
 	return rollbackSetMembers(db, key, members...)
 }
+
+func prepareSetCalculate(args [][]byte) ([]string, []string) {
+	keys := make([]string, len(args))
+	for i, arg := range args {
+		keys[i] = string(arg)
+	}
+	return nil, keys
+}
+
+func prepareSetCalculateStore(args [][]byte) ([]string, []string) {
+	dest := string(args[0])
+	keys := make([]string, len(args) - 1)
+	keyArgs := args[1:]
+	for i, arg := range keyArgs {
+		keys[i] = string(arg)
+	}
+	return []string{dest}, keys
+}
