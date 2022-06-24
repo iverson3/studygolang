@@ -19,6 +19,8 @@ type Connection struct {
 	// 当服务发送响应数据的时候加锁
 	mu sync.Mutex
 
+	password string
+
 	// selected db
 	selectedDB int
 }
@@ -47,6 +49,14 @@ func (c *Connection) Write(b []byte) error {
 
 	_, err := c.conn.Write(b)
 	return err
+}
+
+func (c *Connection) SetPassword(passwd string) {
+	c.password = passwd
+}
+
+func (c *Connection) GetPassword() string {
+	return c.password
 }
 
 // GetDBIndex returns selected db

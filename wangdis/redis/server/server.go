@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"strings"
+	"studygolang/wangdis/cluster"
+	"studygolang/wangdis/config"
 	database2 "studygolang/wangdis/database"
 	"studygolang/wangdis/interface/database"
 	"studygolang/wangdis/lib/sync/atomic"
@@ -32,8 +34,16 @@ type Handler struct {
 }
 
 func MakeHandler() *Handler {
+	var db database.DB
+	// 判断是使用集群模式还是单机模式
+	if config.Properties.Self != "" && len(config.Properties.Peers) > 0 {
+		db = cluster.MakeCluster()
+	} else {
+		db = database2.NewStandaloneServer()
+	}
+
 	return &Handler{
-		db: database2.NewStandaloneServer(),
+		db: db,
 	}
 }
 
