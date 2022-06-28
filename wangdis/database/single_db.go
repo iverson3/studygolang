@@ -1,11 +1,13 @@
 package database
 
 import (
+	"log"
 	"strings"
 	"studygolang/wangdis/datastruct/dict"
 	"studygolang/wangdis/datastruct/lock"
 	"studygolang/wangdis/interface/database"
 	"studygolang/wangdis/interface/redis"
+	"studygolang/wangdis/lib/timewheel"
 	"studygolang/wangdis/redis/protocol"
 	"sync"
 	"time"
@@ -194,6 +196,45 @@ func (db *DB) Flush() {
 	db.data.Clear()
 	db.ttlMap.Clear()
 	db.locker = lock.Make(lockerSize)
+}
+
+// TTL
+
+func genExpireTask(key string) string {
+	return "expire:" + key
+}
+
+// Expire 为指定的key设置TTL Cmd
+func (db *DB) Expire(key string, expireTime time.Time) {
+	db.stopWorld.Wait()
+	db.ttlMap.Put(key, expireTime)
+	taskKey := genExpireTask(key)
+	timewheel.At(expireTime, taskKey, func() {
+		keys := []string{key}
+
+		db.RWLocks(keys, nil)
+		defer db.RWUnLocks(keys, nil)
+
+		log.Println("expire " + key)
+		rawExpireTime, ok := db.ttlMap.Get(key)
+		if !ok {
+			return
+		}
+
+		expireTime, _ := rawExpireTime.(time.Time)
+		expired := time.Now().After(expireTime)
+		if expired {
+			db.Remove(key)
+		}
+	})
+}
+
+// Persist 为指定的key取消掉TTL Cmd
+func (db *DB) Persist(key string) {
+	db.stopWorld.Wait()
+	db.ttlMap.Remove(key)
+	taskKey := genExpireTask(key)
+	timewheel.Cancel(taskKey)
 }
 
 func (db *DB) IsExpired(key string) bool {
