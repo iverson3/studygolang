@@ -198,7 +198,8 @@ func (db *DB) Flush() {
 	db.locker = lock.Make(lockerSize)
 }
 
-// TTL
+// TTL相关方法
+// Time To Live (TTL) 功能可以为 key 设置失效时间。它的核心是存储 key -> expireTime 的 map 以及自动删除过期的 key 的时间轮
 
 func genExpireTask(key string) string {
 	return "expire:" + key
