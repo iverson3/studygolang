@@ -4,127 +4,178 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"github.com/hashicorp/go-uuid"
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/sm3"
 	"github.com/tjfoc/gmsm/sm4"
 	"github.com/tjfoc/gmsm/x509"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"strings"
 )
 
+type Request struct {
+	SKey string
+	Body string
+	Sign string
+}
+
 func main() {
-	//cc()
-	//dd()
-
-	//encode()
-	decode()
-
 	//genKey()
 
-	return
-	//file, _ := os.Open("./pub.key")
-	//keyObj, err := sm2.GenerateKey(file)
+	//encode()
+	//decode()
+
+	//signTest()
+
+	test()
+}
+
+func test() {
+	public := "04627A997F9485281068B0262B346E7AEE72580079CE10E248BE914F8D227F0B2955523D62EA126CA6A68312C43E4A3736D9ADF6118B7759559709ADCF439A5636"
+	private := "95463839606194440177843520030979835176729602072477836123530316400792948456063"
+	fmt.Printf("公钥: %s\n", public)
+	fmt.Printf("私钥: %s\n", private)
+
+	req := encode(public)
+
+	fmt.Println("加密结果:")
+	fmt.Printf("skey: %s\n", req.SKey)
+	fmt.Printf("sign: %s\n", req.Sign)
+	fmt.Printf("body: %s\n", req.Body)
+
+	fmt.Println("解密结果:")
+	decode(private, req)
+}
+
+func signTest() {
+	msg := []byte(`{"respHeader":{"retCode":"0","traceSerial":"788646546"}}`)
+	sign := GenSign(msg)
+
+	//privateKey, err := x509.ReadPrivateKeyFromHex("CFE96E071C65A694AFF9ECCC3234AFC83183C65897616FBDD934682581113B42")
 	//if err != nil {
-	//	fmt.Println(err)
+	//	panic(err)
 	//	return
 	//}
-	//
-	//fmt.Println(keyObj.PublicKey)
-	//fmt.Println(keyObj.X)
-	//fmt.Println(keyObj.Y)
-	//fmt.Println(keyObj.D)
-	//
-	//
-	//
-	//
-	//msg := []byte(`{"respHeader":{"retCode":"0","traceSerial":"788646546","traceDate":"20220215","traceTime":"161800","retMsg":"成功"}}`)
-	//
-	//asn1, err := keyObj.EncryptAsn1(msg, file)
-	//sign, err := keyObj.Sign(file, msg, nil)
-	//fmt.Printf("加密结果1:%x\n",asn1)
-	//fmt.Printf("sign:%x\n",sign)
-	//
-	//pub := &keyObj.PublicKey
-	//ciphertxt, err := pub.EncryptAsn1(msg, file)
-	////verify := pub.Verify(msg, ciphertxt)
-	////fmt.Println(verify)
-	//fmt.Printf("加密结果2:%x\n",ciphertxt)
-	////fmt.Printf("加密结果2:%s\n", hex.EncodeToString(ciphertxt))
+
+	target := GenSign(msg)
+	if target == sign {
+		fmt.Println(true)
+	} else {
+		fmt.Println(false)
+	}
+	//signBytes, err := hex.DecodeString(sign)
+	//verify := privateKey.Verify(msg, signBytes)
+	//fmt.Println(verify)
 }
 
 func genKey() {
 	key, _ := sm2.GenerateKey(nil)
 
+	// 获取十六进制的公钥和私钥
+	privateKeyHex := x509.WritePrivateKeyToHex(key)
+	publicKeyHex := x509.WritePublicKeyToHex(&key.PublicKey)
+
+	b := new(big.Int)
+	setString, _ := b.SetString(privateKeyHex, 16)
+	fmt.Println(setString.String())
+	fmt.Println(strings.ToUpper(publicKeyHex))
+	return
+
 	x := strings.ToUpper(fmt.Sprintf("%x", key.X))
 	y := strings.ToUpper(fmt.Sprintf("%x", key.Y))
-	d := strings.ToUpper(fmt.Sprintf("%x", key.D))
+	//d := strings.ToUpper(fmt.Sprintf("%x", key.D))
 
 	fmt.Printf("%s\n", x)
 	fmt.Printf("%s\n", y)
-	fmt.Printf("%s%s\n", x, y)
-	fmt.Printf("%s\n", d)
-
-	//pub := make([]byte, 100)
-	//_, _ = key.ScalarMult(key.X, key.Y, pub)
-	//fmt.Printf("%x\n", pub)
+	fmt.Printf("公钥： %s%s\n", x, y)
+	//fmt.Printf("%s\n", d)
+	fmt.Println("私钥： ", key.D.String())
 }
 
-func decode() {
-	//skey := "307802202f6673ec45e2f4424b3afcf5b06bad565441a0d62949882e92914aec7122697f022020e54b6e4af50461698e21223765fe3d27b1b2df916f7929155df2fc009fbcbb04206274f2931566194f575e46f807fbd1357a073c235c101ebcc253630cdd203c4c0410ec9766bf897cc80df12b1d0ea828e003"
-	//sign := "09fd44497ddf2d58edf28fe647c481d47dfbc46c647dbd8c762e7215e7713c07"
-	//body := "b48c562271c9fbdc13da81943f60eb9f93c64ce789c1914e3e0091808fd6a2b16dcf33e9ba9290ed58de50308b35eeb116175eca7e7066fa25b6c5dde4eb1116646ec365a5e3385074dcfd6751de9e86c76360c994ddd5ba0949ce30593ebf4c2def368d53e4fb4a6a728daa0364707e8a5595c01ecb5da3fcb7f5322c57ff7a"
+func javaByteToGoByte(src string) string {
+	desc := make([]byte, 0)
+	runes := []rune(src)
+	for _, r := range runes {
+		if r < -128 || r > 127 {
+			return ""
+		}
+		if r < 0 {
+			desc = append(desc, byte(256 + r))
+		} else {
+			desc = append(desc, byte(r))
+		}
+	}
+	return string(desc)
+}
 
-	skey := "307a02210080428fd800743685d142e33bd98fb71db6f3a325c9d50ca822191cc7cb7a39ed022100ee5301ada0e3e43550aae7d4e702592da01516c7f98789ba38cb01b733aec25a04208be6446c122e66b45cb1128c8cb0770fe466d77e8c8dc636db08338f1786462204100caadf1ceddf2b312e075c0f935e4c40"
-	sign := "09fd44497ddf2d58edf28fe647c481d47dfbc46c647dbd8c762e7215e7713c07"
-	body := "b48c562271c9fbdc13da81943f60eb9f93c64ce789c1914e3e0091808fd6a2b16dcf33e9ba9290ed58de50308b35eeb116175eca7e7066fa25b6c5dde4eb1116646ec365a5e3385074dcfd6751de9e86c76360c994ddd5ba0949ce30593ebf4c2def368d53e4fb4a6a728daa0364707e8a5595c01ecb5da3fcb7f5322c57ff7a"
+func decode(privateKeyStr string, req *Request) {
+	skey := req.SKey
+	sign := req.Sign
+	body := req.Body
 
 	//file, _ := os.Open("./priv.pem")
 	//pubkeyPem, err := ioutil.ReadAll(file)
 	//privateKey, err := x509.ReadPrivateKeyFromPem(pubkeyPem, nil)
 
-	//newInt :=new(big.Int)
-	//setString, _ := newInt.SetString("101959616850875943932697770166287063999683974043242337818732170373234155890783", 10)
-	privateKey, err := x509.ReadPrivateKeyFromHex("CFE96E071C65A694AFF9ECCC3234AFC83183C65897616FBDD934682581113B42")
-	//privateKey, err := x509.ReadPrivateKeyFromHex(setString.String())
-	//privateKey, err := x509.ParseSm2PrivateKey(setString.Bytes())
+	// 将十进制的密钥转成十六进制的密钥
+	b := new(big.Int)
+	bString, _ := b.SetString(privateKeyStr, 10)
+	hexD := fmt.Sprintf("%x", bString)
+
+	privateKey, err := x509.ReadPrivateKeyFromHex(hexD)
 	if err != nil {
 		panic(err)
 	}
 
 	decodeString, _ := hex.DecodeString(skey)
 	sm4Key, err := privateKey.DecryptAsn1(decodeString)
-	fmt.Println("sm4Key: ", string(sm4Key))
+	fmt.Println("sm4Key:", string(sm4Key))
 
 	bodyBytes, err := hex.DecodeString(body)
-	out, err := sm4.Sm4Ecb(sm4Key, bodyBytes, false)
-	fmt.Printf("%s\n", out)
+	sm4KeyBytes, err := hex.DecodeString(string(sm4Key))
+	out, err := sm4.Sm4Ecb(sm4KeyBytes, bodyBytes, false)
+	fmt.Printf("解密出来的报文: %s\n", out)
 
-	signBytes, err := hex.DecodeString(sign)
-	pub := &privateKey.PublicKey
-	verify := pub.Verify(out, signBytes)
-	fmt.Println(verify)
+	target := GenSign(out)
+	if target == sign {
+		fmt.Println("签名检验结果: ", true)
+	} else {
+		fmt.Println("签名检验结果: ", false)
+	}
+
+	//signBytes, err := hex.DecodeString(sign)
+	//verify := privateKey.Verify(out, signBytes)
+	//fmt.Println(verify)
 }
 
-func encode() {
+func encode(publicKeyStr string) *Request {
 	//file, _ := os.Open("./pub.pem")
 	//pemBytes, _ := ioutil.ReadAll(file)
 	//publicKey, err := x509.ReadPublicKeyFromPem(pemBytes)
-	publicKey, err := x509.ReadPublicKeyFromHex("70791433D7BC313CBC8B5307B688C4A2762EB8CE87FA298001647FB9AB88C6F14DDBE539847B49AF7552A10D3651BA566E708A3262A2F799465DDA65681FF9FB")
+	publicKey, err := x509.ReadPublicKeyFromHex(publicKeyStr)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := []byte(`{"respHeader":{"retCode":"0","traceSerial":"788646546","traceDate":"20220215","traceTime":"161800","retMsg":"成功"}}`)
-	sm4Key := []byte("1234567890abcdef")
+	fmt.Printf("原始报文: %s\n", msg)
+	// 使用随机算法生成32位的随机字符串
+	uid, _ := uuid.GenerateUUID()
+	uid = strings.ReplaceAll(uid, "-", "")
+	sm4Key := []byte(uid)
+	fmt.Printf("sm4Key: %s\n", sm4Key)
 
 	body := GenBody(msg, sm4Key)
 	sign := GenSign(msg)
 	skey := GenSkey(publicKey, sm4Key)
 
-	fmt.Println(skey)
-	fmt.Println(sign)
-	fmt.Println(body)
+	return &Request{
+		SKey: skey,
+		Body: body,
+		Sign: sign,
+	}
 }
 
 func GenSkey(pub *sm2.PublicKey, sm4Key []byte) string {
@@ -132,31 +183,28 @@ func GenSkey(pub *sm2.PublicKey, sm4Key []byte) string {
 	if err != nil {
 		return "err"
 	}
-
 	return fmt.Sprintf("%x", asn1)
-	//fmt.Printf("加密后： %x\n", asn1)
-
-	//dest, err := keyObj.DecryptAsn1(asn1)
-	//fmt.Printf("解密后： %s\n", dest)
 }
 func GenSign(msg []byte) string {
 	h := sm3.New()
 	h.Write(msg)
 	sum := h.Sum(nil)
-	//fmt.Printf("digest value is: %x\n",sum)
 	return fmt.Sprintf("%x", sum)
 }
 func GenBody(msg []byte, sm4Key []byte) string {
-	//fmt.Printf("key = %v\n", key)
-	//fmt.Printf("data = %x\n", msg)
-	//iv := []byte("0000000000000000")
-	//err = SetIV(iv)//设置SM4算法实现的IV值,不设置则使用默认值
-	ecbMsg, err :=sm4.Sm4Ecb(sm4Key, msg, true)   //sm4Ecb模式pksc7填充加密
+	decodeSm4, _ := hex.DecodeString(string(sm4Key))
+
+	//iv := []byte("00000000000000000000000000000000")
+	//err := sm4.SetIV(iv)//设置SM4算法实现的IV值,不设置则使用默认值
+	ecbMsg, err := sm4.Sm4Ecb(decodeSm4, msg, true)   //sm4Ecb模式pksc7填充加密
+	//ecbMsg, err := sm4.Sm4Cbc(decodeSm4, msg, true)
+	//ecbMsg, err := sm4.Sm4CFB(decodeSm4, msg, true)
+	//ecbMsg, err := sm4.Sm4OFB(decodeSm4, msg, true)
+
 	if err != nil {
 		fmt.Println(err)
 		return ""
 	}
-	//fmt.Printf("ecbMsg = %x\n", ecbMsg)
 	return fmt.Sprintf("%x", ecbMsg)
 }
 
